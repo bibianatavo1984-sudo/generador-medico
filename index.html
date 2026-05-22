@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Formatos Médicos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --blue:#185FA5;--blue-l:#E6F1FB;--blue-m:#378ADD;--blue-d:#0C447C;
+  --green:#3B6D11;--green-l:#EAF3DE;--green-m:#97C459;
+  --orange:#BA7517;--orange-l:#FAEEDA;--orange-m:#EF9F27;
+  --red:#A32D2D;--red-l:#FCEBEB;
+  --border:#E2E6EA;--border-l:#F0F2F5;
+  --text:#1A1D23;--text2:#4A5568;--text3:#8A97A8;
+  --bg:#F7F9FC;--surf:#fff;--r:12px;--rs:8px;
+  --sh:0 1px 4px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh}
+.topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:0 2rem;height:62px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.t-logo{width:36px;height:36px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0}
+.t-title{font-size:16px;font-weight:600}
+.t-sub{font-size:13px;color:var(--text3);margin-left:4px}
+.wrap{max-width:880px;margin:0 auto;padding:2rem 1.5rem}
+.steps{display:flex;align-items:center;gap:6px;margin-bottom:2rem;flex-wrap:wrap}
+.st{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text3);padding:5px 10px;border-radius:20px;transition:all .2s}
+.st.active{color:var(--blue);background:var(--blue-l)}
+.st.done{color:var(--green);background:var(--green-l);cursor:pointer}
+.st.done:hover{background:#d0ebb0}
+.sn{width:22px;height:22px;border-radius:50%;background:var(--border-l);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.st.active .sn{background:var(--blue);border-color:var(--blue);color:#fff}
+.st.done .sn{background:var(--green);border-color:var(--green);color:#fff}
+.sdiv{color:var(--border);font-size:18px}
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:1.75rem;margin-bottom:1.25rem;box-shadow:var(--sh)}
+.ctitle{font-size:17px;font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.ctitle i{font-size:20px;color:var(--blue)}
+.csub{font-size:14px;color:var(--text2);margin-bottom:1.4rem;line-height:1.6}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:600px){.fgrid{grid-template-columns:1fr 1fr}}
+.fc{border:2px solid var(--border);border-radius:var(--r);padding:1.2rem;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;position:relative;background:var(--surf);user-select:none}
+.fc:hover{border-color:var(--blue-m);background:#F0F7FF;transform:translateY(-1px)}
+.fc.sel{border-color:var(--blue);background:var(--blue-l);box-shadow:0 0 0 3px rgba(24,95,165,.12)}
+.fc-icon{font-size:26px;color:var(--text3);margin-bottom:10px;display:block;pointer-events:none}
+.fc.sel .fc-icon{color:var(--blue)}
+.fc-name{font-size:14px;font-weight:600;line-height:1.3;margin-bottom:5px;pointer-events:none}
+.fc-desc{font-size:13px;color:var(--text2);line-height:1.4;pointer-events:none}
+.fc-chk{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:none;align-items:center;justify-content:center;font-size:12px}
+.fc.sel .fc-chk{display:flex}
+.btn{padding:10px 22px;border-radius:var(--rs);font-size:15px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all .15s;display:inline-flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif}
+.btn:hover{background:var(--border-l)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{background:var(--blue-d)}
+.btn.success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.success:hover{background:#27500A}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.brow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:1.5rem}
+.upw{border:2.5px dashed var(--border);border-radius:var(--r);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;position:relative;transition:all .2s}
+.upw:hover{border-color:var(--blue);background:#F0F7FF}
+.upw input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upw .uw-icon{font-size:40px;color:var(--blue);margin-bottom:12px;display:block}
+.upw p{font-size:15px;color:var(--text2);font-weight:500}
+.upw .hint{font-size:13px;color:var(--text3);margin-top:6px}
+.wloaded{background:var(--border-l);border:1px solid var(--border);border-radius:var(--rs);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.wibox{width:44px;height:44px;background:var(--blue-l);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.imgs-title{font-size:13px;font-weight:600;color:var(--text2);margin:1.4rem 0 8px;display:flex;align-items:center;gap:7px}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.icard{border:1.5px solid var(--border);border-radius:var(--rs);overflow:hidden}
+.icard img{width:100%;height:90px;object-fit:cover;display:block}
+.icard-lbl{font-size:12px;padding:5px 8px;color:var(--text2);background:var(--border-l);font-weight:500}
+.scard{border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:12px}
+.shead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;flex-wrap:wrap;gap:8px}
+.slbl{font-size:15px;font-weight:600}
+.sdesc{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5}
+.stags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tag{font-size:12px;padding:3px 9px;border-radius:20px;background:var(--border-l);color:var(--text2);border:1px solid var(--border);font-weight:500}
+.az{border:2px dashed var(--border);border-radius:var(--rs);padding:.9rem;min-height:54px;transition:all .15s}
+.az.has{border-color:var(--green);border-style:solid;background:#F2FAE8}
+.achips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--green-m);border-radius:8px;padding:4px 8px 4px 4px}
+.chip img{width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0}
+.chip-lbl{font-size:12px;font-weight:500;color:var(--green)}
+.add-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--blue);cursor:pointer;padding:6px 10px;border-radius:var(--rs);border:1.5px dashed var(--blue-m);background:var(--blue-l);font-weight:500;transition:background .15s}
+.add-btn:hover{background:#daeeff}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 9px;border-radius:20px;font-weight:500}
+.badge.ai{background:var(--blue-l);color:var(--blue-d);border:1px solid #B5D4F4}
+.badge.manual{background:var(--orange-l);color:#633806;border:1px solid var(--orange-m)}
+.badge.auto{background:var(--green-l);color:var(--green);border:1px solid var(--green-m)}
+.badge.ok{background:var(--green-l);color:var(--green);border:1px solid var(--green-m)}
+.badge.pend{background:var(--orange-l);color:#633806;border:1px solid var(--orange-m)}
+.mov{position:fixed;inset:0;background:rgba(10,15,25,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:1.5rem}
+.mov.open{display:flex}
+.mbox{background:var(--surf);border-radius:var(--r);border:1px solid var(--border);padding:1.75rem;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.gtitle{font-size:12px;font-weight:700;color:var(--text2);margin:1.25rem 0 .6rem;padding-bottom:6px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:.05em}
+.frow{display:grid;grid-template-columns:175px 1fr;gap:10px;align-items:start;margin-bottom:10px}
+@media(max-width:540px){.frow{grid-template-columns:1fr}}
+.flbl{font-size:14px;font-weight:500;color:var(--text2);padding-top:8px;line-height:1.4}
+.fbdg{margin-top:4px}
+.fi{font-size:14px;padding:8px 12px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surf);color:var(--text);width:100%;font-family:'DM Sans',sans-serif;transition:border-color .15s}
+.fi:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12)}
+.fi.manual{background:#FFFBF4;border-color:var(--orange-m)}
+.fi.auto{background:#F6FBF0;border-color:var(--green-m)}
+.fsep{height:1px;background:var(--border-l);margin-bottom:10px;grid-column:1/-1}
+.sbar{border-radius:var(--rs);padding:12px 16px;font-size:14px;display:flex;align-items:center;gap:10px;margin-bottom:1rem;font-weight:500}
+.sbar.loading{background:var(--blue-l);color:var(--blue-d);border:1px solid #B5D4F4}
+.sbar.error{background:var(--red-l);color:var(--red);border:1px solid #F09595}
+.spinner{width:16px;height:16px;border:2.5px solid #B5D4F4;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem}
+.tip{background:var(--blue-l);border:1px solid #B5D4F4;border-radius:var(--rs);padding:.75rem 1rem;font-size:13px;color:var(--blue-d);display:flex;align-items:flex-start;gap:8px;margin-bottom:1rem}
+.alert{padding:.9rem 1.2rem;border-radius:var(--rs);font-size:14px;margin-top:12px;display:flex;align-items:flex-start;gap:8px}
+.alert.error{background:var(--red-l);color:var(--red);border:1px solid #F09595}
+.lab-prev{border:1.5px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:1.25rem}
+.lab-prev table{width:100%;border-collapse:collapse;font-size:13px}
+.lab-prev td{border:1px solid var(--border);padding:8px 12px;vertical-align:middle}
+.lab-prev .tit{text-align:center;font-weight:700;font-size:14px;background:var(--border-l);padding:10px;letter-spacing:.04em}
+.lab-prev .lbl{font-weight:600;color:var(--text2);background:#FAFBFC}
+.lab-prev .val{color:var(--blue-d);font-weight:500}
+.succ{text-align:center;padding:2rem 1rem}
+.succ-icon{width:64px;height:64px;background:var(--green-l);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--green);margin:0 auto 1.25rem}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="t-logo"><i class="ti ti-file-spreadsheet"></i></div>
+  <span class="t-title">Generador de Formatos Médicos</span>
+  <span class="t-sub">— Extracción IA desde pantallazos</span>
+</div>
+
+<div class="wrap">
+  <div class="steps" id="stbar">
+    <div class="st active" id="st1" onclick="navSt(1)"><span class="sn">1</span>Formato</div>
+    <span class="sdiv">›</span>
+    <div class="st" id="st2" onclick="navSt(2)"><span class="sn">2</span>Archivo Word</div>
+    <span class="sdiv">›</span>
+    <div class="st" id="st3" onclick="navSt(3)"><span class="sn">3</span>Asignar</div>
+    <span class="sdiv">›</span>
+    <div class="st" id="st4" onclick="navSt(4)"><span class="sn">4</span>Revisar</div>
+    <span class="sdiv">›</span>
+    <div class="st" id="st5"><span class="sn">5</span>Listo</div>
+  </div>
+
+  <!-- P1 -->
+  <div id="p1" class="card">
+    <div class="ctitle"><i class="ti ti-layout-grid"></i>Seleccionar formato</div>
+    <div class="csub">Elige el tipo de documento que necesitas generar</div>
+    <div class="fgrid" id="fgrid">
+      <div class="fc" id="fmt-domicilio"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-home-2 fc-icon"></i><div class="fc-name">Fórmulas domicilio</div><div class="fc-desc">Paciente + dirección + medicamentos</div></div>
+      <div class="fc" id="fmt-saludcasa"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-heart-plus fc-icon"></i><div class="fc-name">Salud en casa</div><div class="fc-desc">Paciente + medicamentos</div></div>
+      <div class="fc" id="fmt-laboratorios"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-flask fc-icon"></i><div class="fc-name">Laboratorios</div><div class="fc-desc">Formato tabla programación</div></div>
+      <div class="fc" id="fmt-cambioips"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-building-hospital fc-icon"></i><div class="fc-name">Cambio de IPS</div><div class="fc-desc">Paciente + IPS origen/destino</div></div>
+      <div class="fc" id="fmt-solicitudlab"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-test-pipe fc-icon"></i><div class="fc-name">Solicitud laboratorios</div><div class="fc-desc">Paciente + muestra + laboratorios</div></div>
+    </div>
+    <div class="brow">
+      <button class="btn primary" id="btn1" disabled onclick="goSt(2)"><i class="ti ti-arrow-right"></i>Siguiente</button>
+    </div>
+  </div>
+
+  <!-- P2 -->
+  <div id="p2" class="card" style="display:none">
+    <div class="ctitle"><i class="ti ti-file-word"></i>Subir archivo Word con pantallazos</div>
+    <div class="csub">Pega todos los pantallazos en un documento .docx y súbelo aquí.</div>
+    <div class="upw" id="drop-word">
+      <input type="file" id="word-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      <i class="ti ti-file-type-docx uw-icon"></i>
+      <p>Clic o arrastra el archivo .docx aquí</p>
+      <span class="hint">Solo archivos .docx</span>
+    </div>
+    <div id="winfo"></div>
+    <div id="wimgs" style="display:none">
+      <div class="imgs-title"><i class="ti ti-photos" style="font-size:17px"></i>Imágenes encontradas:</div>
+      <div class="igrid" id="igrid"></div>
+    </div>
+    <div id="wnoimg" style="display:none"><div class="alert error"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i>No se encontraron imágenes.</div></div>
+    <div class="brow">
+      <button class="btn" onclick="goSt(1)"><i class="ti ti-arrow-left"></i>Volver</button>
+      <button class="btn primary" id="btn2" disabled onclick="goSt(3)"><i class="ti ti-arrow-right"></i>Asignar imágenes</button>
+    </div>
+  </div>
+
+  <!-- P3 -->
+  <div id="p3" class="card" style="display:none">
+    <div class="ctitle"><i class="ti ti-arrows-exchange"></i>Asignar imágenes a cada sección</div>
+    <div class="csub">Asigna una o varias imágenes por sección.</div>
+    <div class="tip"><i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:1px"></i>Puedes volver atrás en cualquier momento para cambiar el archivo o las imágenes.</div>
+    <div id="aslots"></div>
+    <div class="brow">
+      <button class="btn" onclick="goSt(2)"><i class="ti ti-arrow-left"></i>Volver</button>
+      <button class="btn primary" id="btn3" disabled onclick="runExt()"><i class="ti ti-sparkles"></i>Extraer datos con IA</button>
+    </div>
+  </div>
+
+  <!-- P4 -->
+  <div id="p4" class="card" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:.5rem">
+      <div class="ctitle" style="margin-bottom:0"><i class="ti ti-forms"></i>Revisar y completar datos</div>
+      <div class="legend">
+        <span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span>
+        <span class="badge manual"><i class="ti ti-pencil" style="font-size:11px"></i>Completar manual</span>
+        <span class="badge auto"><i class="ti ti-calendar" style="font-size:11px"></i>Automático</span>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:1.25rem">Verifica los datos. Los campos en naranja debes completarlos tú.</p>
+    <div id="sbar-msg" class="sbar loading" style="display:none"><div class="spinner"></div><span id="sbar-txt"></span></div>
+    <div id="lab-prev-sec" style="display:none">
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="ti ti-table" style="font-size:15px;color:var(--blue)"></i>Vista previa del Excel:</div>
+      <div class="lab-prev" id="lab-prev"></div>
+    </div>
+    <div id="farea"></div>
+    <div class="brow">
+      <button class="btn" onclick="goSt(3)"><i class="ti ti-arrow-left"></i>Volver</button>
+      <button class="btn success" onclick="dlExcel()"><i class="ti ti-download"></i>Descargar Excel</button>
+    </div>
+  </div>
+
+  <!-- P5 -->
+  <div id="p5" class="card" style="display:none">
+    <div class="succ">
+      <div class="succ-icon"><i class="ti ti-circle-check"></i></div>
+      <div style="font-size:20px;font-weight:600;margin-bottom:8px">¡Excel generado exitosamente!</div>
+      <div style="font-size:15px;color:var(--text2);margin-bottom:1.5rem">El archivo fue descargado con todos los datos extraídos.</div>
+      <button class="btn primary" onclick="resetAll()"><i class="ti ti-plus"></i>Procesar nuevo caso</button>
+    </div>
+  </div>
+</div>
+
+<div class="mov" id="mov" onclick="if(event.target===this)closeMov()">
+  <div class="mbox" id="mbox"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ── La URL del proxy se detecta automáticamente según donde esté alojado ──
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8888/api/claude'
+  : '/api/claude';
+
+let SF=null,WI=[],SA={},ED={};
+const today=new Date();
+const todayStr=String(today.getDate()).padStart(2,'0')+'/'+String(today.getMonth()+1).padStart(2,'0')+'/'+today.getFullYear();
+
+const FORMATS={
+  domicilio:{name:'Fórmulas para domicilio',slots:[
+    {id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre, identificación, dirección y teléfonos',
+     fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'direccion',l:'Dirección atención',ai:1},{k:'municipio',l:'Municipio',ai:1},{k:'barrio',l:'Barrio',ai:1},
+             {k:'telefonos',l:'Teléfono paciente',ai:1,combined:['Teléfono paciente','Celular 1 paciente','Celular 2 paciente']}]},
+    {id:'med',label:'Medicamentos',desc:'Pantallas con medicamentos prescritos y dosificación',
+     fields:[{k:'medicamento',l:'Nombre medicamento',ai:1},{k:'dosis',l:'Dosis',ai:1},{k:'unidades',l:'Unidades',ai:1},{k:'via',l:'Vía de administración',ai:1},{k:'frecuencia',l:'Frecuencia',ai:1},{k:'total_dosis',l:'Total dosis a aplicar',ai:1},{k:'descripcion',l:'Descripción',ai:1}]}
+  ]},
+  saludcasa:{name:'Fórmulas salud en casa',slots:[
+    {id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre e identificación',fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1}]},
+    {id:'med',label:'Medicamentos',desc:'Pantallas con medicamentos',fields:[{k:'medicamento',l:'Nombre medicamento',ai:1},{k:'dosis',l:'Dosis',ai:1},{k:'unidades',l:'Unidades',ai:1},{k:'via',l:'Vía de administración',ai:1},{k:'frecuencia',l:'Frecuencia',ai:1},{k:'total_dosis',l:'Total dosis a aplicar',ai:1},{k:'descripcion',l:'Descripción',ai:1}]}
+  ]},
+  laboratorios:{name:'Laboratorios',isLab:true,slots:[
+    {id:'dp',label:'Datos del paciente',desc:'Pantallas con información personal, dirección y teléfonos',
+     fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'direccion',l:'Dirección de atención',ai:1},{k:'municipio',l:'Municipio',ai:1},{k:'barrio',l:'Barrio',ai:1},
+             {k:'telefonos',l:'Teléfono del paciente',ai:1,combined:['Teléfono paciente','Celular 1 paciente','Celular 2 paciente']}]}
+  ],extra:[{k:'persona_programa',l:'Persona que programa',m:1},{k:'fecha_prog',l:'Fecha de programación',m:1}]},
+  cambioips:{name:'Cambio de IPS',slots:[
+    {id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre e identificación',fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1}]}
+  ],extra:[{k:'fecha_actual',l:'Fecha actual',auto:1,val:todayStr},{k:'ips_origen',l:'IPS a la que pertenece',m:1},{k:'cod_origen',l:'Código IPS origen',m:1},{k:'ips_destino',l:'IPS para la que va',m:1},{k:'cod_destino',l:'Código IPS destino',m:1},{k:'medico',l:'Médico que ordena',m:1},{k:'gestora',l:'Gestora',m:1}]},
+  solicitudlab:{name:'Solicitud de laboratorios',slots:[
+    {id:'ds',label:'Datos del paciente y solicitud',desc:'Pantallas con paciente, tipo de muestra y fecha',
+     fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'tipo_muestra',l:'Tipo de muestra',ai:1},{k:'fecha_muestra',l:'Fecha de toma de muestra',ai:1}]}
+  ],extra:[{k:'laboratorios',l:'Laboratorios',m:1,ta:1}]}
+};
+
+function goSt(n){
+  for(let i=1;i<=5;i++){
+    document.getElementById('p'+i).style.display=i===n?'block':'none';
+    const s=document.getElementById('st'+i);
+    if(s) s.className='st'+(i===n?' active':(i<n?' done':''));
+  }
+  if(n===3) buildSlots();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function navSt(n){const s=document.getElementById('st'+n);if(s&&(s.classList.contains('done')||s.classList.contains('active')))goSt(n);}
+
+document.getElementById('fgrid').addEventListener('click',function(e){
+  const c=e.target.closest('.fc');if(!c)return;
+  SF=c.id.replace('fmt-','');
+  document.querySelectorAll('.fc').forEach(x=>x.classList.remove('sel'));
+  c.classList.add('sel');
+  document.getElementById('btn1').disabled=false;
+});
+
+const wordInput=document.getElementById('word-input');
+const dropWord=document.getElementById('drop-word');
+wordInput.addEventListener('change',e=>{if(e.target.files[0])loadWord(e.target.files[0]);});
+dropWord.addEventListener('dragover',e=>{e.preventDefault();dropWord.style.borderColor='var(--blue)';});
+dropWord.addEventListener('dragleave',()=>dropWord.style.borderColor='');
+dropWord.addEventListener('drop',e=>{e.preventDefault();dropWord.style.borderColor='';if(e.dataTransfer.files[0])loadWord(e.dataTransfer.files[0]);});
+
+async function loadWord(file){
+  const info=document.getElementById('winfo');
+  info.innerHTML=`<div class="wloaded"><div class="wibox"><i class="ti ti-file-type-docx" style="font-size:22px;color:var(--blue)"></i></div><div style="flex:1"><div style="font-size:14px;font-weight:600">${file.name}</div><div style="font-size:13px;color:var(--text2)">Extrayendo imágenes...</div></div><div class="spinner"></div></div>`;
+  dropWord.style.display='none';
+  try{
+    const zip=await JSZip.loadAsync(await file.arrayBuffer());
+    const paths=Object.keys(zip.files).filter(n=>/word\/media\//i.test(n)&&/\.(png|jpe?g|gif|bmp|webp)/i.test(n));
+    WI=[];
+    for(const p of paths){
+      const ext=p.split('.').pop().toLowerCase();
+      const mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='png'?'image/png':ext==='gif'?'image/gif':'image/webp';
+      const ab=await zip.files[p].async('arraybuffer');
+      const b64=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result.split(',')[1]);rd.readAsDataURL(new Blob([ab],{type:mime}));});
+      WI.push({url:URL.createObjectURL(new Blob([ab],{type:mime})),b64,mime});
+    }
+    const n=WI.length;
+    info.innerHTML=`<div class="wloaded"><div class="wibox"><i class="ti ti-file-type-docx" style="font-size:22px;color:var(--blue)"></i></div><div style="flex:1"><div style="font-size:14px;font-weight:600">${file.name}</div><div style="font-size:13px;color:var(--text2)">${n} imagen${n!==1?'es':''} encontrada${n!==1?'s':''}</div></div><span class="badge ok"><i class="ti ti-check" style="font-size:12px"></i>Listo</span><button onclick="resetWord()" style="padding:5px 12px;border-radius:var(--rs);font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--orange-m);background:var(--orange-l);color:#633806;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i>Cambiar</button></div>`;
+    if(n>0){
+      const g=document.getElementById('igrid');g.innerHTML='';
+      WI.forEach((img,i)=>{const d=document.createElement('div');d.className='icard';d.innerHTML=`<img src="${img.url}" alt="Img ${i+1}"><div class="icard-lbl">Imagen ${i+1}</div>`;g.appendChild(d);});
+      document.getElementById('wimgs').style.display='block';document.getElementById('wnoimg').style.display='none';
+      document.getElementById('btn2').disabled=false;SA={};
+    }else{document.getElementById('wnoimg').style.display='block';document.getElementById('wimgs').style.display='none';}
+  }catch(err){
+    info.innerHTML=`<div class="alert error"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i>Error al leer el archivo.</div>`;
+    dropWord.style.display='block';
+  }
+}
+function resetWord(){WI=[];SA={};wordInput.value='';document.getElementById('winfo').innerHTML='';document.getElementById('wimgs').style.display='none';document.getElementById('wnoimg').style.display='none';dropWord.style.display='block';document.getElementById('btn2').disabled=true;}
+
+let aSID=null,tSel=[];
+function buildSlots(){
+  const fmt=FORMATS[SF],c=document.getElementById('aslots');c.innerHTML='';
+  fmt.slots.forEach(slot=>{
+    const imgs=SA[slot.id]||[],has=imgs.length>0;
+    const tags=slot.fields.map(f=>`<span class="tag">${f.l}</span>`).join('');
+    let chips='';
+    if(has){chips='<div class="achips">';imgs.forEach((idx,pos)=>{chips+=`<div class="chip"><img src="${WI[idx].url}" alt="img"><span class="chip-lbl">Img ${idx+1}</span><span onclick="rmImg('${slot.id}',${pos})" style="cursor:pointer;color:var(--red);font-size:18px;line-height:1;margin-left:3px">×</span></div>`;});chips+='</div>';}
+    const d=document.createElement('div');d.className='scard';
+    d.innerHTML=`<div class="shead"><span class="slbl">${slot.label}</span>${has?`<span class="badge ok"><i class="ti ti-check" style="font-size:12px"></i>${imgs.length} imagen${imgs.length>1?'es':''}</span>`:`<span class="badge pend"><i class="ti ti-clock" style="font-size:12px"></i>Pendiente</span>`}</div><div class="sdesc">${slot.desc}</div><div class="stags">${tags}</div><div class="az${has?' has':''}">${chips}<div class="add-btn" onclick="openPick('${slot.id}')"><i class="ti ti-photo-plus" style="font-size:16px"></i>${has?'+ Agregar imagen':'Seleccionar imagen(es)'}</div></div>`;
+    c.appendChild(d);
+  });
+  chkAsgn();
+}
+function openPick(sid){
+  aSID=sid;tSel=[...(SA[sid]||[])];
+  const name=FORMATS[SF].slots.find(s=>s.id===sid).label;
+  const cards=WI.map((img,i)=>{
+    const isSel=tSel.includes(i);
+    return `<div onclick="togImg(${i})" id="pi-${i}" style="border:2px solid ${isSel?'var(--blue)':'var(--border)'};border-radius:var(--rs);overflow:hidden;cursor:pointer;transition:all .15s;position:relative;background:${isSel?'var(--blue-l)':'var(--surf)'}">
+      ${isSel?`<div class="sb" style="position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1"><i class="ti ti-check"></i></div>`:''}
+      <img src="${img.url}" style="width:100%;height:100px;object-fit:cover;display:block" alt="Img ${i+1}">
+      <div style="font-size:13px;padding:6px 9px;color:var(--text2);background:var(--border-l);font-weight:500">Imagen ${i+1}</div></div>`;
+  }).join('');
+  document.getElementById('mbox').innerHTML=`<div style="font-size:16px;font-weight:600;margin-bottom:6px"><i class="ti ti-photo-search" style="font-size:20px;vertical-align:-3px;margin-right:8px;color:var(--blue)"></i>Seleccionar imágenes</div><div style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Sección: <strong>${name}</strong></div><div class="tip" style="margin-bottom:1rem"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0"></i>Haz clic para marcar/desmarcar. Puedes elegir <strong>varias</strong>.</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">${cards}</div><div style="display:flex;gap:10px;margin-top:1.25rem;flex-wrap:wrap"><button id="cbtn" onclick="confPick()" class="btn primary"><i class="ti ti-check"></i>Confirmar (${tSel.length})</button><button onclick="closeMov()" class="btn"><i class="ti ti-x"></i>Cancelar</button></div>`;
+  document.getElementById('mov').classList.add('open');
+}
+function togImg(i){
+  const idx=tSel.indexOf(i);if(idx>=0)tSel.splice(idx,1);else tSel.push(i);
+  const c=document.getElementById('pi-'+i),isSel=tSel.includes(i);
+  c.style.border=`2px solid ${isSel?'var(--blue)':'var(--border)'}`;c.style.background=isSel?'var(--blue-l)':'var(--surf)';
+  const ex=c.querySelector('.sb');if(ex)ex.remove();
+  if(isSel){const b=document.createElement('div');b.className='sb';b.style.cssText='position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1';b.innerHTML='<i class="ti ti-check"></i>';c.appendChild(b);}
+  const btn=document.getElementById('cbtn');if(btn)btn.innerHTML=`<i class="ti ti-check"></i>Confirmar (${tSel.length})`;
+}
+function confPick(){SA[aSID]=[...tSel];closeMov();buildSlots();}
+function rmImg(sid,pos){if(SA[sid])SA[sid].splice(pos,1);buildSlots();}
+function closeMov(){document.getElementById('mov').classList.remove('open');aSID=null;tSel=[];}
+function chkAsgn(){document.getElementById('btn3').disabled=!FORMATS[SF].slots.every(s=>(SA[s.id]||[]).length>0);}
+
+function buildPrompt(labels){
+  return `Eres un experto extrayendo datos de pantallazos de sistemas médicos colombianos.
+
+El sistema usa CAMPOS DE FORMULARIO con diseño de "label flotante":
+- El nombre del campo aparece como texto pequeño en la esquina superior del recuadro
+- El VALOR del dato está escrito DENTRO del recuadro
+
+También puede haber tablas donde el encabezado está en la fila superior y el dato en la fila de abajo.
+
+EJEMPLOS de lo que debes extraer:
+- Campo "Paciente" contiene "VIVIANA MELISSA OTALVARO GOMEZ" → {"Paciente": "VIVIANA MELISSA OTALVARO GOMEZ"}
+- Campo "Identificación" contiene "1038411860" → {"Identificación": "1038411860"}
+- Campo "Municipio" contiene "RIONEGRO" → {"Municipio": "RIONEGRO"}
+- Campo "Dirección atención" contiene "Diagonal 52g # 42-06 Altos De La Pereira" → {"Dirección atención": "Diagonal 52g # 42-06 Altos De La Pereira"}
+- Campo "Barrio" contiene "Altos de la pereira" → {"Barrio": "Altos de la pereira"}
+- Campo "Teléfono paciente" contiene "3117985652" → {"Teléfono paciente": "3117985652"}
+- Campo "Celular 1 paciente" contiene "3117985652" → {"Celular 1 paciente": "3117985652"}
+- Campo "Dosis" contiene "1" → {"Dosis": "1"}
+- Campo "Unidades" contiene "gr" → {"Unidades": "gr"}
+- Campo "Vía administración" contiene "I.V." → {"Vía administración": "I.V."}
+- Campo "Frecuencias" contiene "8 Horas" → {"Frecuencias": "8 Horas"}
+- Campo "Total dosis a aplicar" contiene "9" → {"Total dosis a aplicar": "9"}
+- El campo "Buscar por codigo o nombre" puede contener el medicamento ej: "29239 - PARACETAMOL - 1/100 G/ML"
+
+CAMPOS A EXTRAER: ${labels.map(l=>`"${l}"`).join(', ')}
+
+REGLAS:
+1. Devuelve SOLO el JSON, sin backticks, sin texto adicional.
+2. Extrae el VALOR dentro del campo, no el nombre del campo.
+3. Si no encuentras un campo en la imagen usa "".
+4. Incluye TODOS los campos en el JSON.
+
+JSON:`;
+}
+
+async function runExt(){
+  goSt(4);
+  const fmt=FORMATS[SF],sb=document.getElementById('sbar-msg'),st=document.getElementById('sbar-txt');
+  ED={};
+  for(const slot of fmt.slots){
+    const idxs=SA[slot.id]||[];if(!idxs.length)continue;
+    sb.style.display='flex';sb.className='sbar loading';
+    const labels=[];
+    slot.fields.forEach(f=>{if(f.combined)f.combined.forEach(l=>labels.push(l));else labels.push(f.l);});
+    const res={};
+    for(let pos=0;pos<idxs.length;pos++){
+      const img=WI[idxs[pos]];
+      st.textContent=`Analizando "${slot.label}" — imagen ${pos+1} de ${idxs.length}...`;
+      try{
+        const r=await fetch(API_URL,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            model:'claude-sonnet-4-20250514',
+            max_tokens:1500,
+            messages:[{role:'user',content:[
+              {type:'image',source:{type:'base64',media_type:img.mime,data:img.b64}},
+              {type:'text',text:buildPrompt(labels)}
+            ]}]
+          })
+        });
+        const data=await r.json();
+        if(data.error) throw new Error(data.error.message);
+        const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+        const parsed=JSON.parse(raw);
+        Object.keys(parsed).forEach(lbl=>{const v=(parsed[lbl]||'').toString().trim();if(v&&v!==lbl)res[lbl]=v;});
+      }catch(e){
+        sb.className='sbar error';
+        st.textContent=`Error imagen ${pos+1}: ${e.message}`;
+        await new Promise(r=>setTimeout(r,2500));
+        sb.className='sbar loading';
+      }
+    }
+    slot.fields.forEach(f=>{
+      if(f.combined){const vals=f.combined.map(l=>res[l]||'').filter(v=>v.trim()!=='');ED[f.k]=vals.join(' / ');}
+      else ED[f.k]=res[f.l]||'';
+    });
+  }
+  if(fmt.extra)fmt.extra.forEach(f=>{ED[f.k]=f.auto?f.val:'';});
+  sb.style.display='none';
+  if(SF==='laboratorios'){document.getElementById('lab-prev-sec').style.display='block';updLabPrev();}
+  renderFields();
+}
+
+function updLabPrev(){
+  document.getElementById('lab-prev').innerHTML=`<table>
+    <tr><td colspan="4" class="tit">PROGRAMACIÓN DE LABORATORIO</td></tr>
+    <tr><td class="lbl">Paciente:</td><td class="val">${ED.paciente||''}</td><td class="lbl">Identificación:</td><td class="val">${ED.identificacion||''}</td></tr>
+    <tr><td class="lbl">Dirección de atención:</td><td class="val">${ED.direccion||''}</td><td class="lbl">Municipio:</td><td class="val">${ED.municipio||''}</td></tr>
+    <tr><td class="lbl">Barrio:</td><td class="val">${ED.barrio||''}</td><td colspan="2" class="lbl">Tel. paciente - Cel. 1, Cel. 2:<br><span class="val">${ED.telefonos||''}</span></td></tr>
+    <tr><td class="lbl">Persona que programa:</td><td class="val">${ED.persona_programa||''}</td><td class="lbl">Fecha de programación:</td><td class="val">${ED.fecha_prog||''}</td></tr>
+  </table>`;
+}
+
+function renderFields(){
+  const fmt=FORMATS[SF],area=document.getElementById('farea');area.innerHTML='';
+  const secs=[];
+  fmt.slots.forEach(s=>secs.push({g:s.label,fields:s.fields}));
+  if(fmt.extra)secs.push({g:'Datos adicionales',fields:fmt.extra});
+  secs.forEach(sec=>{
+    const g=document.createElement('div');g.className='gtitle';
+    g.innerHTML=`<i class="ti ti-point-filled" style="font-size:13px;color:var(--blue)"></i>${sec.g}`;
+    area.appendChild(g);
+    sec.fields.forEach(f=>{
+      const val=ED[f.k]||'',isMn=!!f.m,isAu=!!f.auto,isTa=!!f.ta;
+      const bdg=isAu?`<span class="badge auto"><i class="ti ti-calendar" style="font-size:11px"></i>Automático</span>`:f.ai?`<span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span>`:`<span class="badge manual"><i class="ti ti-pencil" style="font-size:11px"></i>Completar manual</span>`;
+      const cls='fi'+(isMn?' manual':(isAu?' auto':''));
+      const row=document.createElement('div');row.className='frow';
+      const lc=document.createElement('div');lc.innerHTML=`<div class="flbl">${f.l}</div><div class="fbdg">${bdg}</div>`;
+      const ic=document.createElement('div');
+      if(isTa)ic.innerHTML=`<textarea id="ef-${f.k}" rows="4" class="${cls}" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:14px;padding:8px 12px;border-radius:var(--rs);border:1.5px solid ${isMn?'var(--orange-m)':'var(--border)'};width:100%;color:var(--text);background:${isMn?'#FFFBF4':'var(--surf)'}">${val}</textarea>`;
+      else ic.innerHTML=`<input id="ef-${f.k}" type="text" value="${(val+'').replace(/"/g,'&quot;')}" class="${cls}" ${isAu?'readonly':''}>`;
+      row.appendChild(lc);row.appendChild(ic);area.appendChild(row);
+      const sep=document.createElement('div');sep.className='fsep';area.appendChild(sep);
+      const el=ic.querySelector('input,textarea');
+      if(el)el.addEventListener('input',()=>{ED[f.k]=el.value;if(SF==='laboratorios')updLabPrev();});
+    });
+  });
+}
+
+function dlExcel(){
+  const fmt=FORMATS[SF];
+  const allF=[];fmt.slots.forEach(s=>s.fields.forEach(f=>allF.push(f)));if(fmt.extra)fmt.extra.forEach(f=>allF.push(f));
+  allF.forEach(f=>{const el=document.getElementById('ef-'+f.k);if(el)ED[f.k]=el.value||'';});
+  SF==='laboratorios'?dlLab():dlGen(fmt,allF);goSt(5);
+}
+function dlLab(){
+  const wb=XLSX.utils.book_new(),ws={};
+  const sc=(r,c,v,bold,bg,al,wr)=>{const ref=XLSX.utils.encode_cell({r,c});ws[ref]={v:v||'',t:'s',s:{font:{bold:!!bold,sz:11},fill:{fgColor:{rgb:bg||'FFFFFF'}},alignment:{horizontal:al||'left',vertical:'center',wrapText:!!wr},border:{top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}}}};};
+  sc(0,0,'PROGRAMACIÓN DE LABORATORIO',true,'D9E8F8','center');sc(0,1,'',false,'D9E8F8');sc(0,2,'',false,'D9E8F8');sc(0,3,'',false,'D9E8F8');
+  sc(1,0,'Paciente:',true,'F5F7FA');sc(1,1,ED.paciente||'');sc(1,2,'Identificación:',true,'F5F7FA');sc(1,3,ED.identificacion||'');
+  sc(2,0,'Dirección de atención:',true,'F5F7FA');sc(2,1,ED.direccion||'');sc(2,2,'Municipio:',true,'F5F7FA');sc(2,3,ED.municipio||'');
+  sc(3,0,'Barrio:',true,'F5F7FA');sc(3,1,ED.barrio||'');sc(3,2,'Teléfono del paciente-Celular 1 paciente, Celular 2 paciente:\n'+(ED.telefonos||''),true,'F5F7FA','left',true);sc(3,3,'',false,'F5F7FA');
+  sc(4,0,'Persona que programa:',true,'F5F7FA');sc(4,1,ED.persona_programa||'');sc(4,2,'Fecha de programación:',true,'F5F7FA');sc(4,3,ED.fecha_prog||'');
+  ws['!ref']='A1:D5';ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}},{s:{r:3,c:2},e:{r:3,c:3}}];
+  ws['!cols']=[{wch:26},{wch:32},{wch:42},{wch:28}];ws['!rows']=[{hpt:26},{hpt:22},{hpt:22},{hpt:48},{hpt:22}];
+  XLSX.utils.book_append_sheet(wb,ws,'Programación Laboratorio');XLSX.writeFile(wb,`laboratorios_${fd()}.xlsx`);
+}
+function dlGen(fmt,allF){
+  const h=allF.map(f=>f.l),v=allF.map(f=>ED[f.k]||'');
+  const ws=XLSX.utils.aoa_to_sheet([h,v]);
+  ws['!cols']=h.map(x=>({wch:Math.max(x.length+5,22)}));
+  h.forEach((x,i)=>{const c=XLSX.utils.encode_cell({r:0,c:i});if(!ws[c])return;ws[c].s={font:{bold:true,color:{rgb:'FFFFFF'},sz:12},fill:{fgColor:{rgb:'185FA5'}},alignment:{horizontal:'center',wrapText:true}};});
+  ws['!rows']=[{hpt:24},{hpt:20}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,fmt.name.substring(0,31));
+  XLSX.writeFile(wb,`${SF}_${fd()}.xlsx`);
+}
+function fd(){return String(today.getFullYear())+String(today.getMonth()+1).padStart(2,'0')+String(today.getDate()).padStart(2,'0');}
+function resetAll(){
+  SF=null;WI=[];SA={};ED={};wordInput.value='';
+  document.getElementById('winfo').innerHTML='';document.getElementById('wimgs').style.display='none';
+  document.getElementById('wnoimg').style.display='none';dropWord.style.display='block';
+  document.getElementById('btn2').disabled=true;
+  document.querySelectorAll('.fc').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('btn1').disabled=true;
+  document.getElementById('lab-prev-sec').style.display='none';
+  goSt(1);
+}
+</script>
+</body>
+</html>
