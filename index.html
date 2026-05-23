@@ -355,38 +355,59 @@ function closeMov(){document.getElementById('mov').classList.remove('open');aSID
 function chkAsgn(){document.getElementById('btn3').disabled=!FORMATS[SF].slots.every(s=>(SA[s.id]||[]).length>0);}
 
 function buildPrompt(labels){
-  return `Eres un experto extrayendo datos de pantallazos de sistemas médicos colombianos.
+  return `Eres un experto extrayendo datos de pantallazos de sistemas de gestión médica colombianos (como SISPRO, Gestión Salud, o similares).
 
+CONTEXTO DEL SISTEMA:
 El sistema tiene DOS tipos de campos visuales:
 
-TIPO 1 - TABLA con encabezados:
-La pantalla muestra una tabla donde la primera fila tiene los nombres de columna (encabezados) y la segunda fila tiene los datos reales del paciente.
+TIPO 1 — TABLA con encabezados (más común para datos del paciente):
+La pantalla muestra una tabla donde la PRIMERA FILA tiene los nombres de columna y la SEGUNDA FILA (o filas siguientes) tiene los datos reales.
 Ejemplo:
-| Paciente                        | Identificación |
-| VIVIANA MELISSA OTALVARO GOMEZ  | 1038411860     |
-En este caso "Paciente" = "VIVIANA MELISSA OTALVARO GOMEZ" e "Identificación" = "1038411860"
+| Paciente            | Identificación | Dirección          |
+| MARIA JOSE GARCIA   | 1038411860     | CRA 45 # 23-10     |
+→ "Paciente" = "MARIA JOSE GARCIA", "Identificación" = "1038411860"
 
-TIPO 2 - CAMPOS FLOTANTES:
-Cada campo tiene una etiqueta pequeña en la esquina superior del recuadro y el valor dentro del recuadro.
-Ejemplo: recuadro con etiqueta "Municipio" y dentro el texto "RIONEGRO" → "Municipio" = "RIONEGRO"
+TIPO 2 — CAMPOS FLOTANTES (etiqueta pequeña arriba, valor dentro del recuadro):
+Cada campo tiene una etiqueta diminuta en la esquina superior izquierda del recuadro, y el valor real está DENTRO del recuadro, más grande.
+Ejemplo: recuadro con etiqueta pequeña "Municipio" y dentro el texto grande "RIONEGRO" → "Municipio" = "RIONEGRO"
+IMPORTANTE: El valor es el texto GRANDE dentro del recuadro, NO la etiqueta pequeña.
 
-REGLA CRÍTICA PARA "Paciente":
-El campo "Paciente" es el NOMBRE COMPLETO DEL PACIENTE (la persona enferma que recibe atención médica).
-NO confundir con: "Nombre cuidador", "Nombre responsable", "Nombre acompañante" — esas son personas diferentes.
-El paciente aparece típicamente en la tabla principal del sistema, no en la sección de cuidadores.
+REGLA CRÍTICA — CAMPO "Paciente":
+- "Paciente" = el nombre completo de la PERSONA ENFERMA que recibe atención médica.
+- Aparece en la tabla PRINCIPAL del sistema, generalmente en la primera fila de datos.
+- NUNCA usar el nombre del cuidador, responsable, acompañante, ni familiar.
+- Si ves secciones separadas como "Datos del cuidador", "Responsable", "Acompañante" → IGNORA esos nombres para el campo Paciente.
+- El paciente es quien tiene la identificación (cédula, tarjeta de identidad) registrada como TITULAR del servicio.
+
+ALIASES — el sistema puede usar estos nombres alternativos para los campos:
+- "Paciente" → también puede aparecer como: "Nombre paciente", "Nombre", "Nombre completo", "Afiliado", "Beneficiario", "Titular"
+- "Identificación" → también: "Doc.", "Documento", "No. doc", "Cédula", "CC", "ID"  
+- "Dirección atención" → también: "Dirección", "Dir.", "Domicilio", "Dirección de atención"
+- "Municipio" → también: "Ciudad", "Mpio"
+- "Barrio" → también: "Sector", "Localidad"
+- "Teléfono paciente" → también: "Tel.", "Teléfono", "Tel. paciente"
+- "Celular 1 paciente" → también: "Cel.", "Celular", "Cel. 1", "Móvil"
+- "Celular 2 paciente" → también: "Cel. 2", "Celular 2", "Móvil 2"
+- "Nombre medicamento" → también: "Medicamento", "Producto", "Descripción medicamento"
+- "Vía de administración" → también: "Vía", "Via adm."
+- "Frecuencia" → también: "Frec.", "Cada"
+- "Total dosis a aplicar" → también: "Total dosis", "No. dosis", "Cantidad"
+- "Tipo de muestra" → también: "Muestra", "Tipo muestra"
+- "Fecha de toma de muestra" → también: "Fecha muestra", "Fecha toma"
 
 CAMPOS A EXTRAER: ${labels.map(l=>`"${l}"`).join(', ')}
 
-REGLAS:
-1. Devuelve SOLO el JSON sin backticks ni texto adicional.
-2. Extrae el VALOR real del dato, no el nombre del campo.
-3. Si no encuentras un campo en esta imagen usa "".
-4. Incluye TODOS los campos en el JSON.
-5. Para "Paciente": extrae SOLO el nombre del paciente, nunca el nombre del cuidador.
+REGLAS DE RESPUESTA:
+1. Devuelve SOLO el objeto JSON, sin backticks, sin texto adicional, sin explicaciones.
+2. Extrae el VALOR real del dato, nunca el nombre del campo ni la etiqueta.
+3. Si un campo no está visible en esta imagen, usa "" (cadena vacía).
+4. Incluye TODOS los campos solicitados en el JSON, aunque estén vacíos.
+5. Para nombres de personas: escríbelos en MAYÚSCULAS tal como aparecen en pantalla.
+6. Para números de identificación: solo dígitos, sin puntos ni comas.
+7. Para teléfonos: incluye el número completo tal como aparece.
 
 JSON:`;
 }
-
 async function runExt(){
   goSt(4);
   const fmt=FORMATS[SF],sb=document.getElementById('sbar-msg'),st=document.getElementById('sbar-txt');
