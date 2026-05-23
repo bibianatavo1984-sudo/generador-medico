@@ -122,13 +122,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="t-logo"><i class="ti ti-file-spreadsheet"></i></div>
   <span class="t-title">Generador de Formatos Médicos</span>
   <span class="t-sub">— Extracción IA desde pantallazos</span>
 </div>
-
 <div class="wrap">
   <div class="steps" id="stbar">
     <div class="st active" id="st1" onclick="navSt(1)"><span class="sn">1</span>Formato</div>
@@ -142,7 +140,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     <div class="st" id="st5"><span class="sn">5</span>Listo</div>
   </div>
 
-  <!-- P1 -->
   <div id="p1" class="card">
     <div class="ctitle"><i class="ti ti-layout-grid"></i>Seleccionar formato</div>
     <div class="csub">Elige el tipo de documento que necesitas generar</div>
@@ -158,7 +155,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     </div>
   </div>
 
-  <!-- P2 -->
   <div id="p2" class="card" style="display:none">
     <div class="ctitle"><i class="ti ti-file-word"></i>Subir archivo Word con pantallazos</div>
     <div class="csub">Pega todos los pantallazos en un documento .docx y súbelo aquí.</div>
@@ -180,7 +176,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     </div>
   </div>
 
-  <!-- P3 -->
   <div id="p3" class="card" style="display:none">
     <div class="ctitle"><i class="ti ti-arrows-exchange"></i>Asignar imágenes a cada sección</div>
     <div class="csub">Asigna una o varias imágenes por sección.</div>
@@ -192,7 +187,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     </div>
   </div>
 
-  <!-- P4 -->
   <div id="p4" class="card" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:.5rem">
       <div class="ctitle" style="margin-bottom:0"><i class="ti ti-forms"></i>Revisar y completar datos</div>
@@ -215,7 +209,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     </div>
   </div>
 
-  <!-- P5 -->
   <div id="p5" class="card" style="display:none">
     <div class="succ">
       <div class="succ-icon"><i class="ti ti-circle-check"></i></div>
@@ -233,10 +226,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ── La URL del proxy se detecta automáticamente según donde esté alojado ──
-const API_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8888/api/claude'
-  : '/api/claude';
+const API_URL = '/api/claude';
 
 let SF=null,WI=[],SA={},ED={};
 const today=new Date();
@@ -367,34 +357,32 @@ function chkAsgn(){document.getElementById('btn3').disabled=!FORMATS[SF].slots.e
 function buildPrompt(labels){
   return `Eres un experto extrayendo datos de pantallazos de sistemas médicos colombianos.
 
-El sistema usa CAMPOS DE FORMULARIO con diseño de "label flotante":
-- El nombre del campo aparece como texto pequeño en la esquina superior del recuadro
-- El VALOR del dato está escrito DENTRO del recuadro
+El sistema tiene DOS tipos de campos visuales:
 
-También puede haber tablas donde el encabezado está en la fila superior y el dato en la fila de abajo.
+TIPO 1 - TABLA con encabezados:
+La pantalla muestra una tabla donde la primera fila tiene los nombres de columna (encabezados) y la segunda fila tiene los datos reales del paciente.
+Ejemplo:
+| Paciente                        | Identificación |
+| VIVIANA MELISSA OTALVARO GOMEZ  | 1038411860     |
+En este caso "Paciente" = "VIVIANA MELISSA OTALVARO GOMEZ" e "Identificación" = "1038411860"
 
-EJEMPLOS de lo que debes extraer:
-- Campo "Paciente" contiene "VIVIANA MELISSA OTALVARO GOMEZ" → {"Paciente": "VIVIANA MELISSA OTALVARO GOMEZ"}
-- Campo "Identificación" contiene "1038411860" → {"Identificación": "1038411860"}
-- Campo "Municipio" contiene "RIONEGRO" → {"Municipio": "RIONEGRO"}
-- Campo "Dirección atención" contiene "Diagonal 52g # 42-06 Altos De La Pereira" → {"Dirección atención": "Diagonal 52g # 42-06 Altos De La Pereira"}
-- Campo "Barrio" contiene "Altos de la pereira" → {"Barrio": "Altos de la pereira"}
-- Campo "Teléfono paciente" contiene "3117985652" → {"Teléfono paciente": "3117985652"}
-- Campo "Celular 1 paciente" contiene "3117985652" → {"Celular 1 paciente": "3117985652"}
-- Campo "Dosis" contiene "1" → {"Dosis": "1"}
-- Campo "Unidades" contiene "gr" → {"Unidades": "gr"}
-- Campo "Vía administración" contiene "I.V." → {"Vía administración": "I.V."}
-- Campo "Frecuencias" contiene "8 Horas" → {"Frecuencias": "8 Horas"}
-- Campo "Total dosis a aplicar" contiene "9" → {"Total dosis a aplicar": "9"}
-- El campo "Buscar por codigo o nombre" puede contener el medicamento ej: "29239 - PARACETAMOL - 1/100 G/ML"
+TIPO 2 - CAMPOS FLOTANTES:
+Cada campo tiene una etiqueta pequeña en la esquina superior del recuadro y el valor dentro del recuadro.
+Ejemplo: recuadro con etiqueta "Municipio" y dentro el texto "RIONEGRO" → "Municipio" = "RIONEGRO"
+
+REGLA CRÍTICA PARA "Paciente":
+El campo "Paciente" es el NOMBRE COMPLETO DEL PACIENTE (la persona enferma que recibe atención médica).
+NO confundir con: "Nombre cuidador", "Nombre responsable", "Nombre acompañante" — esas son personas diferentes.
+El paciente aparece típicamente en la tabla principal del sistema, no en la sección de cuidadores.
 
 CAMPOS A EXTRAER: ${labels.map(l=>`"${l}"`).join(', ')}
 
 REGLAS:
-1. Devuelve SOLO el JSON, sin backticks, sin texto adicional.
-2. Extrae el VALOR dentro del campo, no el nombre del campo.
-3. Si no encuentras un campo en la imagen usa "".
+1. Devuelve SOLO el JSON sin backticks ni texto adicional.
+2. Extrae el VALOR real del dato, no el nombre del campo.
+3. Si no encuentras un campo en esta imagen usa "".
 4. Incluye TODOS los campos en el JSON.
+5. Para "Paciente": extrae SOLO el nombre del paciente, nunca el nombre del cuidador.
 
 JSON:`;
 }
@@ -417,7 +405,7 @@ async function runExt(){
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({
-            model:'claude-haiku-4-5-20251001',
+            model:'claude-3-5-sonnet-20241022',
             max_tokens:1500,
             messages:[{role:'user',content:[
               {type:'image',source:{type:'base64',media_type:img.mime,data:img.b64}},
