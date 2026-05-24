@@ -8,14 +8,14 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <style>
 :root{
-  --blue:#185FA5;--blue-l:#E6F1FB;--blue-m:#378ADD;--blue-d:#0C447C;
-  --green:#3B6D11;--green-l:#EAF3DE;--green-m:#97C459;
-  --orange:#BA7517;--orange-l:#FAEEDA;--orange-m:#EF9F27;
-  --red:#A32D2D;--red-l:#FCEBEB;
-  --border:#E2E6EA;--border-l:#F0F2F5;
-  --text:#1A1D23;--text2:#4A5568;--text3:#8A97A8;
-  --bg:#F7F9FC;--surf:#fff;--r:12px;--rs:8px;
-  --sh:0 1px 4px rgba(0,0,0,.08);
+--blue:#185FA5;--blue-l:#E6F1FB;--blue-m:#378ADD;--blue-d:#0C447C;
+--green:#3B6D11;--green-l:#EAF3DE;--green-m:#97C459;
+--orange:#BA7517;--orange-l:#FAEEDA;--orange-m:#EF9F27;
+--red:#A32D2D;--red-l:#FCEBEB;
+--border:#E2E6EA;--border-l:#F0F2F5;
+--text:#1A1D23;--text2:#4A5568;--text3:#8A97A8;
+--bg:#F7F9FC;--surf:#fff;--r:12px;--rs:8px;
+--sh:0 1px 4px rgba(0,0,0,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh}
@@ -117,164 +117,166 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .lab-prev .tit{text-align:center;font-weight:700;font-size:14px;background:var(--border-l);padding:10px;letter-spacing:.04em}
 .lab-prev .lbl{font-weight:600;color:var(--text2);background:#FAFBFC}
 .lab-prev .val{color:var(--blue-d);font-weight:500}
+.med-block{border:1px solid var(--border);border-radius:var(--rs);padding:1rem;margin-bottom:12px;background:var(--border-l)}
+.med-block-title{font-size:13px;font-weight:700;color:var(--blue-d);margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .succ{text-align:center;padding:2rem 1rem}
 .succ-icon{width:64px;height:64px;background:var(--green-l);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--green);margin:0 auto 1.25rem}
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div class="t-logo"><i class="ti ti-file-spreadsheet"></i></div>
-  <span class="t-title">Generador de Formatos Médicos</span>
-  <span class="t-sub">— Extracción IA desde pantallazos</span>
+<div class="t-logo"><i class="ti ti-file-spreadsheet"></i></div>
+<span class="t-title">Generador de Formatos Médicos</span>
+<span class="t-sub">— Extracción IA desde pantallazos</span>
 </div>
 <div class="wrap">
-  <div class="steps" id="stbar">
-    <div class="st active" id="st1" onclick="navSt(1)"><span class="sn">1</span>Formato</div>
-    <span class="sdiv">›</span>
-    <div class="st" id="st2" onclick="navSt(2)"><span class="sn">2</span>Archivo Word</div>
-    <span class="sdiv">›</span>
-    <div class="st" id="st3" onclick="navSt(3)"><span class="sn">3</span>Asignar</div>
-    <span class="sdiv">›</span>
-    <div class="st" id="st4" onclick="navSt(4)"><span class="sn">4</span>Revisar</div>
-    <span class="sdiv">›</span>
-    <div class="st" id="st5"><span class="sn">5</span>Listo</div>
-  </div>
+<div class="steps" id="stbar">
+<div class="st active" id="st1" onclick="navSt(1)"><span class="sn">1</span>Formato</div>
+<span class="sdiv">›</span>
+<div class="st" id="st2" onclick="navSt(2)"><span class="sn">2</span>Archivo Word</div>
+<span class="sdiv">›</span>
+<div class="st" id="st3" onclick="navSt(3)"><span class="sn">3</span>Asignar</div>
+<span class="sdiv">›</span>
+<div class="st" id="st4" onclick="navSt(4)"><span class="sn">4</span>Revisar</div>
+<span class="sdiv">›</span>
+<div class="st" id="st5"><span class="sn">5</span>Listo</div>
+</div>
 
-  <div id="p1" class="card">
-    <div class="ctitle"><i class="ti ti-layout-grid"></i>Seleccionar formato</div>
-    <div class="csub">Elige el tipo de documento que necesitas generar</div>
-    <div class="fgrid" id="fgrid">
-      <div class="fc" id="fmt-domicilio"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-home-2 fc-icon"></i><div class="fc-name">Fórmulas domicilio</div><div class="fc-desc">Paciente + dirección + medicamentos</div></div>
-      <div class="fc" id="fmt-saludcasa"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-heart-plus fc-icon"></i><div class="fc-name">Salud en casa</div><div class="fc-desc">Paciente + medicamentos</div></div>
-      <div class="fc" id="fmt-laboratorios"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-flask fc-icon"></i><div class="fc-name">Laboratorios</div><div class="fc-desc">Formato tabla programación</div></div>
-      <div class="fc" id="fmt-cambioips"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-building-hospital fc-icon"></i><div class="fc-name">Cambio de IPS</div><div class="fc-desc">Paciente + IPS origen/destino</div></div>
-      <div class="fc" id="fmt-solicitudlab"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-test-pipe fc-icon"></i><div class="fc-name">Solicitud laboratorios</div><div class="fc-desc">Paciente + muestra + laboratorios</div></div>
-    </div>
-    <div class="brow">
-      <button class="btn primary" id="btn1" disabled onclick="goSt(2)"><i class="ti ti-arrow-right"></i>Siguiente</button>
-    </div>
-  </div>
+<div id="p1" class="card">
+<div class="ctitle"><i class="ti ti-layout-grid"></i>Seleccionar formato</div>
+<div class="csub">Elige el tipo de documento que necesitas generar</div>
+<div class="fgrid" id="fgrid">
+<div class="fc" id="fmt-domicilio"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-home-2 fc-icon"></i><div class="fc-name">Fórmulas domicilio</div><div class="fc-desc">Paciente + dirección + medicamentos</div></div>
+<div class="fc" id="fmt-saludcasa"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-heart-plus fc-icon"></i><div class="fc-name">Salud en casa</div><div class="fc-desc">Paciente + medicamentos</div></div>
+<div class="fc" id="fmt-laboratorios"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-flask fc-icon"></i><div class="fc-name">Laboratorios</div><div class="fc-desc">Formato tabla programación</div></div>
+<div class="fc" id="fmt-cambioips"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-building-hospital fc-icon"></i><div class="fc-name">Cambio de IPS</div><div class="fc-desc">Paciente + IPS origen/destino</div></div>
+<div class="fc" id="fmt-solicitudlab"><span class="fc-chk"><i class="ti ti-check" style="font-size:12px"></i></span><i class="ti ti-test-pipe fc-icon"></i><div class="fc-name">Solicitud laboratorios</div><div class="fc-desc">Paciente + muestra + laboratorios</div></div>
+</div>
+<div class="brow">
+<button class="btn primary" id="btn1" disabled onclick="goSt(2)"><i class="ti ti-arrow-right"></i>Siguiente</button>
+</div>
+</div>
 
-  <div id="p2" class="card" style="display:none">
-    <div class="ctitle"><i class="ti ti-file-word"></i>Subir archivo Word con pantallazos</div>
-    <div class="csub">Pega todos los pantallazos en un documento .docx y súbelo aquí.</div>
-    <div class="upw" id="drop-word">
-      <input type="file" id="word-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-      <i class="ti ti-file-type-docx uw-icon"></i>
-      <p>Clic o arrastra el archivo .docx aquí</p>
-      <span class="hint">Solo archivos .docx</span>
-    </div>
-    <div id="winfo"></div>
-    <div id="wimgs" style="display:none">
-      <div class="imgs-title"><i class="ti ti-photos" style="font-size:17px"></i>Imágenes encontradas:</div>
-      <div class="igrid" id="igrid"></div>
-    </div>
-    <div id="wnoimg" style="display:none"><div class="alert error"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i>No se encontraron imágenes.</div></div>
-    <div class="brow">
-      <button class="btn" onclick="goSt(1)"><i class="ti ti-arrow-left"></i>Volver</button>
-      <button class="btn primary" id="btn2" disabled onclick="goSt(3)"><i class="ti ti-arrow-right"></i>Asignar imágenes</button>
-    </div>
-  </div>
+<div id="p2" class="card" style="display:none">
+<div class="ctitle"><i class="ti ti-file-word"></i>Subir archivo Word con pantallazos</div>
+<div class="csub">Pega todos los pantallazos en un documento .docx y súbelo aquí.</div>
+<div class="upw" id="drop-word">
+<input type="file" id="word-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+<i class="ti ti-file-type-docx uw-icon"></i>
+<p>Clic o arrastra el archivo .docx aquí</p>
+<span class="hint">Solo archivos .docx</span>
+</div>
+<div id="winfo"></div>
+<div id="wimgs" style="display:none">
+<div class="imgs-title"><i class="ti ti-photos" style="font-size:17px"></i>Imágenes encontradas:</div>
+<div class="igrid" id="igrid"></div>
+</div>
+<div id="wnoimg" style="display:none"><div class="alert error"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i>No se encontraron imágenes.</div></div>
+<div class="brow">
+<button class="btn" onclick="goSt(1)"><i class="ti ti-arrow-left"></i>Volver</button>
+<button class="btn primary" id="btn2" disabled onclick="goSt(3)"><i class="ti ti-arrow-right"></i>Asignar imágenes</button>
+</div>
+</div>
 
-  <div id="p3" class="card" style="display:none">
-    <div class="ctitle"><i class="ti ti-arrows-exchange"></i>Asignar imágenes a cada sección</div>
-    <div class="csub">Asigna una o varias imágenes por sección.</div>
-    <div class="tip"><i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:1px"></i>Puedes volver atrás en cualquier momento para cambiar el archivo o las imágenes.</div>
-    <div id="aslots"></div>
-    <div class="brow">
-      <button class="btn" onclick="goSt(2)"><i class="ti ti-arrow-left"></i>Volver</button>
-      <button class="btn primary" id="btn3" disabled onclick="runExt()"><i class="ti ti-sparkles"></i>Extraer datos con IA</button>
-    </div>
-  </div>
+<div id="p3" class="card" style="display:none">
+<div class="ctitle"><i class="ti ti-arrows-exchange"></i>Asignar imágenes a cada sección</div>
+<div class="csub">Asigna una o varias imágenes por sección.</div>
+<div class="tip"><i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:1px"></i>Puedes volver atrás en cualquier momento para cambiar el archivo o las imágenes.</div>
+<div id="aslots"></div>
+<div class="brow">
+<button class="btn" onclick="goSt(2)"><i class="ti ti-arrow-left"></i>Volver</button>
+<button class="btn primary" id="btn3" disabled onclick="runExt()"><i class="ti ti-sparkles"></i>Extraer datos con IA</button>
+</div>
+</div>
 
-  <div id="p4" class="card" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:.5rem">
-      <div class="ctitle" style="margin-bottom:0"><i class="ti ti-forms"></i>Revisar y completar datos</div>
-      <div class="legend">
-        <span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span>
-        <span class="badge manual"><i class="ti ti-pencil" style="font-size:11px"></i>Completar manual</span>
-        <span class="badge auto"><i class="ti ti-calendar" style="font-size:11px"></i>Automático</span>
-      </div>
-    </div>
-    <p style="font-size:14px;color:var(--text2);margin-bottom:1.25rem">Verifica los datos. Los campos en naranja debes completarlos tú.</p>
-    <div id="sbar-msg" class="sbar loading" style="display:none"><div class="spinner"></div><span id="sbar-txt"></span></div>
-    <div id="lab-prev-sec" style="display:none">
-      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="ti ti-table" style="font-size:15px;color:var(--blue)"></i>Vista previa del Excel:</div>
-      <div class="lab-prev" id="lab-prev"></div>
-    </div>
-    <div id="farea"></div>
-    <div class="brow">
-      <button class="btn" onclick="goSt(3)"><i class="ti ti-arrow-left"></i>Volver</button>
-      <button class="btn success" onclick="dlExcel()"><i class="ti ti-download"></i>Descargar Excel</button>
-    </div>
-  </div>
+<div id="p4" class="card" style="display:none">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:.5rem">
+<div class="ctitle" style="margin-bottom:0"><i class="ti ti-forms"></i>Revisar y completar datos</div>
+<div class="legend">
+<span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span>
+<span class="badge manual"><i class="ti ti-pencil" style="font-size:11px"></i>Completar manual</span>
+<span class="badge auto"><i class="ti ti-calendar" style="font-size:11px"></i>Automático</span>
+</div>
+</div>
+<p style="font-size:14px;color:var(--text2);margin-bottom:1.25rem">Verifica los datos. Los campos en naranja debes completarlos tú.</p>
+<div id="sbar-msg" class="sbar loading" style="display:none"><div class="spinner"></div><span id="sbar-txt"></span></div>
+<div id="lab-prev-sec" style="display:none">
+<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="ti ti-table" style="font-size:15px;color:var(--blue)"></i>Vista previa del Excel:</div>
+<div class="lab-prev" id="lab-prev"></div>
+</div>
+<div id="farea"></div>
+<div class="brow">
+<button class="btn" onclick="goSt(3)"><i class="ti ti-arrow-left"></i>Volver</button>
+<button class="btn success" onclick="dlExcel()"><i class="ti ti-download"></i>Descargar Excel</button>
+</div>
+</div>
 
-  <div id="p5" class="card" style="display:none">
-    <div class="succ">
-      <div class="succ-icon"><i class="ti ti-circle-check"></i></div>
-      <div style="font-size:20px;font-weight:600;margin-bottom:8px">¡Excel generado exitosamente!</div>
-      <div style="font-size:15px;color:var(--text2);margin-bottom:1.5rem">El archivo fue descargado con todos los datos extraídos.</div>
-      <button class="btn primary" onclick="resetAll()"><i class="ti ti-plus"></i>Procesar nuevo caso</button>
-    </div>
-  </div>
+<div id="p5" class="card" style="display:none">
+<div class="succ">
+<div class="succ-icon"><i class="ti ti-circle-check"></i></div>
+<div style="font-size:20px;font-weight:600;margin-bottom:8px">¡Excel generado exitosamente!</div>
+<div style="font-size:15px;color:var(--text2);margin-bottom:1.5rem">El archivo fue descargado con todos los datos extraídos.</div>
+<button class="btn primary" onclick="resetAll()"><i class="ti ti-plus"></i>Procesar nuevo caso</button>
+</div>
+</div>
 </div>
 
 <div class="mov" id="mov" onclick="if(event.target===this)closeMov()">
-  <div class="mbox" id="mbox"></div>
+<div class="mbox" id="mbox"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const API_URL = '/api/claude';
-
-let SF=null,WI=[],SA={},ED={};
+let SF=null,WI=[],SA={},ED={},MEDS=[];
 const today=new Date();
 const todayStr=String(today.getDate()).padStart(2,'0')+'/'+String(today.getMonth()+1).padStart(2,'0')+'/'+today.getFullYear();
 
 const FORMATS={
-  domicilio:{name:'Fórmulas para domicilio',slots:[
-    {id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre, identificación, dirección y teléfonos',
-     fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'direccion',l:'Dirección atención',ai:1},{k:'municipio',l:'Municipio',ai:1},{k:'barrio',l:'Barrio',ai:1},
-             {k:'telefonos',l:'Teléfono paciente',ai:1,combined:['Teléfono paciente','Celular 1 paciente','Celular 2 paciente']}]},
-    {id:'med',label:'Medicamentos',desc:'Pantallas con medicamentos prescritos y dosificación',
-     fields:[{k:'medicamento',l:'Nombre medicamento',ai:1},{k:'dosis',l:'Dosis',ai:1},{k:'unidades',l:'Unidades',ai:1},{k:'via',l:'Vía de administración',ai:1},{k:'frecuencia',l:'Frecuencia',ai:1},{k:'total_dosis',l:'Total dosis a aplicar',ai:1},{k:'descripcion',l:'Descripción',ai:1}]}
-  ]},
-  saludcasa:{name:'Fórmulas salud en casa',slots:[
-    {id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre e identificación',fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1}]},
-    {id:'med',label:'Medicamentos',desc:'Pantallas con medicamentos',fields:[{k:'medicamento',l:'Nombre medicamento',ai:1},{k:'dosis',l:'Dosis',ai:1},{k:'unidades',l:'Unidades',ai:1},{k:'via',l:'Vía de administración',ai:1},{k:'frecuencia',l:'Frecuencia',ai:1},{k:'total_dosis',l:'Total dosis a aplicar',ai:1},{k:'descripcion',l:'Descripción',ai:1}]}
-  ]},
-  laboratorios:{name:'Laboratorios',isLab:true,slots:[
-    {id:'dp',label:'Datos del paciente',desc:'Pantallas con información personal, dirección y teléfonos',
-     fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'direccion',l:'Dirección de atención',ai:1},{k:'municipio',l:'Municipio',ai:1},{k:'barrio',l:'Barrio',ai:1},
-             {k:'telefonos',l:'Teléfono del paciente',ai:1,combined:['Teléfono paciente','Celular 1 paciente','Celular 2 paciente']}]}
-  ],extra:[{k:'persona_programa',l:'Persona que programa',m:1},{k:'fecha_prog',l:'Fecha de programación',m:1}]},
-  cambioips:{name:'Cambio de IPS',slots:[
-    {id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre e identificación',fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1}]}
-  ],extra:[{k:'fecha_actual',l:'Fecha actual',auto:1,val:todayStr},{k:'ips_origen',l:'IPS a la que pertenece',m:1},{k:'cod_origen',l:'Código IPS origen',m:1},{k:'ips_destino',l:'IPS para la que va',m:1},{k:'cod_destino',l:'Código IPS destino',m:1},{k:'medico',l:'Médico que ordena',m:1},{k:'gestora',l:'Gestora',m:1}]},
-  solicitudlab:{name:'Solicitud de laboratorios',slots:[
-    {id:'ds',label:'Datos del paciente y solicitud',desc:'Pantallas con paciente, tipo de muestra y fecha',
-     fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'tipo_muestra',l:'Tipo de muestra',ai:1},{k:'fecha_muestra',l:'Fecha de toma de muestra',ai:1}]}
-  ],extra:[{k:'laboratorios',l:'Laboratorios',m:1,ta:1}]}
+domicilio:{name:'Fórmulas para domicilio',slots:[
+{id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre, identificación, dirección y teléfonos',
+fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'direccion',l:'Dirección atención',ai:1},{k:'municipio',l:'Municipio',ai:1},{k:'barrio',l:'Barrio',ai:1},
+{k:'telefonos',l:'Teléfono paciente',ai:1,combined:['Teléfono paciente','Celular 1 paciente','Celular 2 paciente']}]},
+{id:'med',label:'Medicamentos',desc:'Pantallas con medicamentos prescritos y dosificación',isMed:true,
+fields:[{k:'medicamento',l:'Nombre medicamento',ai:1},{k:'dosis',l:'Dosis',ai:1},{k:'unidades',l:'Unidades',ai:1},{k:'via',l:'Vía de administración',ai:1},{k:'frecuencia',l:'Frecuencia',ai:1},{k:'total_dosis',l:'Total dosis a aplicar',ai:1},{k:'descripcion',l:'Descripción',ai:1}]}
+]},
+saludcasa:{name:'Fórmulas salud en casa',slots:[
+{id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre e identificación',fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1}]},
+{id:'med',label:'Medicamentos',desc:'Pantallas con medicamentos',isMed:true,fields:[{k:'medicamento',l:'Nombre medicamento',ai:1},{k:'dosis',l:'Dosis',ai:1},{k:'unidades',l:'Unidades',ai:1},{k:'via',l:'Vía de administración',ai:1},{k:'frecuencia',l:'Frecuencia',ai:1},{k:'total_dosis',l:'Total dosis a aplicar',ai:1},{k:'descripcion',l:'Descripción',ai:1}]}
+]},
+laboratorios:{name:'Laboratorios',isLab:true,slots:[
+{id:'dp',label:'Datos del paciente',desc:'Pantallas con información personal, dirección y teléfonos',
+fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'direccion',l:'Dirección de atención',ai:1},{k:'municipio',l:'Municipio',ai:1},{k:'barrio',l:'Barrio',ai:1},
+{k:'telefonos',l:'Teléfono del paciente',ai:1,combined:['Teléfono paciente','Celular 1 paciente','Celular 2 paciente']}]}
+],extra:[{k:'persona_programa',l:'Persona que programa',m:1},{k:'fecha_prog',l:'Fecha de programación',m:1}]},
+cambioips:{name:'Cambio de IPS',slots:[
+{id:'dp',label:'Datos del paciente',desc:'Pantallas con nombre e identificación',fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1}]}
+],extra:[{k:'fecha_actual',l:'Fecha actual',auto:1,val:todayStr},{k:'ips_origen',l:'IPS a la que pertenece',m:1},{k:'cod_origen',l:'Código IPS origen',m:1},{k:'ips_destino',l:'IPS para la que va',m:1},{k:'cod_destino',l:'Código IPS destino',m:1},{k:'medico',l:'Médico que ordena',m:1},{k:'gestora',l:'Gestora',m:1}]},
+solicitudlab:{name:'Solicitud de laboratorios',slots:[
+{id:'ds',label:'Datos del paciente y solicitud',desc:'Pantallas con paciente, tipo de muestra y fecha',
+fields:[{k:'paciente',l:'Paciente',ai:1},{k:'identificacion',l:'Identificación',ai:1},{k:'tipo_muestra',l:'Tipo de muestra',ai:1},{k:'fecha_muestra',l:'Fecha de toma de muestra',ai:1}]}
+],extra:[{k:'laboratorios',l:'Laboratorios',m:1,ta:1}]}
 };
 
 function goSt(n){
-  for(let i=1;i<=5;i++){
-    document.getElementById('p'+i).style.display=i===n?'block':'none';
-    const s=document.getElementById('st'+i);
-    if(s) s.className='st'+(i===n?' active':(i<n?' done':''));
-  }
-  if(n===3) buildSlots();
-  window.scrollTo({top:0,behavior:'smooth'});
+for(let i=1;i<=5;i++){
+document.getElementById('p'+i).style.display=i===n?'block':'none';
+const s=document.getElementById('st'+i);
+if(s) s.className='st'+(i===n?' active':(i<n?' done':''));
 }
+if(n===3) buildSlots();
+window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function navSt(n){const s=document.getElementById('st'+n);if(s&&(s.classList.contains('done')||s.classList.contains('active')))goSt(n);}
 
 document.getElementById('fgrid').addEventListener('click',function(e){
-  const c=e.target.closest('.fc');if(!c)return;
-  SF=c.id.replace('fmt-','');
-  document.querySelectorAll('.fc').forEach(x=>x.classList.remove('sel'));
-  c.classList.add('sel');
-  document.getElementById('btn1').disabled=false;
+const c=e.target.closest('.fc');if(!c)return;
+SF=c.id.replace('fmt-','');
+document.querySelectorAll('.fc').forEach(x=>x.classList.remove('sel'));
+c.classList.add('sel');
+document.getElementById('btn1').disabled=false;
 });
 
 const wordInput=document.getElementById('word-input');
@@ -285,253 +287,381 @@ dropWord.addEventListener('dragleave',()=>dropWord.style.borderColor='');
 dropWord.addEventListener('drop',e=>{e.preventDefault();dropWord.style.borderColor='';if(e.dataTransfer.files[0])loadWord(e.dataTransfer.files[0]);});
 
 async function loadWord(file){
-  const info=document.getElementById('winfo');
-  info.innerHTML=`<div class="wloaded"><div class="wibox"><i class="ti ti-file-type-docx" style="font-size:22px;color:var(--blue)"></i></div><div style="flex:1"><div style="font-size:14px;font-weight:600">${file.name}</div><div style="font-size:13px;color:var(--text2)">Extrayendo imágenes...</div></div><div class="spinner"></div></div>`;
-  dropWord.style.display='none';
-  try{
-    const zip=await JSZip.loadAsync(await file.arrayBuffer());
-    const paths=Object.keys(zip.files).filter(n=>/word\/media\//i.test(n)&&/\.(png|jpe?g|gif|bmp|webp)/i.test(n));
-    WI=[];
-    for(const p of paths){
-      const ext=p.split('.').pop().toLowerCase();
-      const mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='png'?'image/png':ext==='gif'?'image/gif':'image/webp';
-      const ab=await zip.files[p].async('arraybuffer');
-      const b64=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result.split(',')[1]);rd.readAsDataURL(new Blob([ab],{type:mime}));});
-      WI.push({url:URL.createObjectURL(new Blob([ab],{type:mime})),b64,mime});
-    }
-    const n=WI.length;
-    info.innerHTML=`<div class="wloaded"><div class="wibox"><i class="ti ti-file-type-docx" style="font-size:22px;color:var(--blue)"></i></div><div style="flex:1"><div style="font-size:14px;font-weight:600">${file.name}</div><div style="font-size:13px;color:var(--text2)">${n} imagen${n!==1?'es':''} encontrada${n!==1?'s':''}</div></div><span class="badge ok"><i class="ti ti-check" style="font-size:12px"></i>Listo</span><button onclick="resetWord()" style="padding:5px 12px;border-radius:var(--rs);font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--orange-m);background:var(--orange-l);color:#633806;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i>Cambiar</button></div>`;
-    if(n>0){
-      const g=document.getElementById('igrid');g.innerHTML='';
-      WI.forEach((img,i)=>{const d=document.createElement('div');d.className='icard';d.innerHTML=`<img src="${img.url}" alt="Img ${i+1}"><div class="icard-lbl">Imagen ${i+1}</div>`;g.appendChild(d);});
-      document.getElementById('wimgs').style.display='block';document.getElementById('wnoimg').style.display='none';
-      document.getElementById('btn2').disabled=false;SA={};
-    }else{document.getElementById('wnoimg').style.display='block';document.getElementById('wimgs').style.display='none';}
-  }catch(err){
-    info.innerHTML=`<div class="alert error"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i>Error al leer el archivo.</div>`;
-    dropWord.style.display='block';
-  }
+const info=document.getElementById('winfo');
+info.innerHTML=`<div class="wloaded"><div class="wibox"><i class="ti ti-file-type-docx" style="font-size:22px;color:var(--blue)"></i></div><div style="flex:1"><div style="font-size:14px;font-weight:600">${file.name}</div><div style="font-size:13px;color:var(--text2)">Extrayendo imágenes...</div></div><div class="spinner"></div></div>`;
+dropWord.style.display='none';
+try{
+const zip=await JSZip.loadAsync(await file.arrayBuffer());
+const paths=Object.keys(zip.files).filter(n=>/word\/media\//i.test(n)&&/\.(png|jpe?g|gif|bmp|webp)/i.test(n));
+WI=[];
+for(const p of paths){
+const ext=p.split('.').pop().toLowerCase();
+const mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='png'?'image/png':ext==='gif'?'image/gif':'image/webp';
+const ab=await zip.files[p].async('arraybuffer');
+const b64=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result.split(',')[1]);rd.readAsDataURL(new Blob([ab],{type:mime}));});
+WI.push({url:URL.createObjectURL(new Blob([ab],{type:mime})),b64,mime});
 }
+const n=WI.length;
+info.innerHTML=`<div class="wloaded"><div class="wibox"><i class="ti ti-file-type-docx" style="font-size:22px;color:var(--blue)"></i></div><div style="flex:1"><div style="font-size:14px;font-weight:600">${file.name}</div><div style="font-size:13px;color:var(--text2)">${n} imagen${n!==1?'es':''} encontrada${n!==1?'s':''}</div></div><span class="badge ok"><i class="ti ti-check" style="font-size:12px"></i>Listo</span><button onclick="resetWord()" style="padding:5px 12px;border-radius:var(--rs);font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--orange-m);background:var(--orange-l);color:#633806;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i>Cambiar</button></div>`;
+if(n>0){
+const g=document.getElementById('igrid');g.innerHTML='';
+WI.forEach((img,i)=>{const d=document.createElement('div');d.className='icard';d.innerHTML=`<img src="${img.url}" alt="Img ${i+1}"><div class="icard-lbl">Imagen ${i+1}</div>`;g.appendChild(d);});
+document.getElementById('wimgs').style.display='block';document.getElementById('wnoimg').style.display='none';
+document.getElementById('btn2').disabled=false;SA={};
+}else{document.getElementById('wnoimg').style.display='block';document.getElementById('wimgs').style.display='none';}
+}catch(err){
+info.innerHTML=`<div class="alert error"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i>Error al leer el archivo.</div>`;
+dropWord.style.display='block';
+}
+}
+
 function resetWord(){WI=[];SA={};wordInput.value='';document.getElementById('winfo').innerHTML='';document.getElementById('wimgs').style.display='none';document.getElementById('wnoimg').style.display='none';dropWord.style.display='block';document.getElementById('btn2').disabled=true;}
 
 let aSID=null,tSel=[];
 function buildSlots(){
-  const fmt=FORMATS[SF],c=document.getElementById('aslots');c.innerHTML='';
-  fmt.slots.forEach(slot=>{
-    const imgs=SA[slot.id]||[],has=imgs.length>0;
-    const tags=slot.fields.map(f=>`<span class="tag">${f.l}</span>`).join('');
-    let chips='';
-    if(has){chips='<div class="achips">';imgs.forEach((idx,pos)=>{chips+=`<div class="chip"><img src="${WI[idx].url}" alt="img"><span class="chip-lbl">Img ${idx+1}</span><span onclick="rmImg('${slot.id}',${pos})" style="cursor:pointer;color:var(--red);font-size:18px;line-height:1;margin-left:3px">×</span></div>`;});chips+='</div>';}
-    const d=document.createElement('div');d.className='scard';
-    d.innerHTML=`<div class="shead"><span class="slbl">${slot.label}</span>${has?`<span class="badge ok"><i class="ti ti-check" style="font-size:12px"></i>${imgs.length} imagen${imgs.length>1?'es':''}</span>`:`<span class="badge pend"><i class="ti ti-clock" style="font-size:12px"></i>Pendiente</span>`}</div><div class="sdesc">${slot.desc}</div><div class="stags">${tags}</div><div class="az${has?' has':''}">${chips}<div class="add-btn" onclick="openPick('${slot.id}')"><i class="ti ti-photo-plus" style="font-size:16px"></i>${has?'+ Agregar imagen':'Seleccionar imagen(es)'}</div></div>`;
-    c.appendChild(d);
-  });
-  chkAsgn();
+const fmt=FORMATS[SF],c=document.getElementById('aslots');c.innerHTML='';
+fmt.slots.forEach(slot=>{
+const imgs=SA[slot.id]||[],has=imgs.length>0;
+const tags=slot.fields.map(f=>`<span class="tag">${f.l}</span>`).join('');
+let chips='';
+if(has){chips='<div class="achips">';imgs.forEach((idx,pos)=>{chips+=`<div class="chip"><img src="${WI[idx].url}" alt="img"><span class="chip-lbl">Img ${idx+1}</span><span onclick="rmImg('${slot.id}',${pos})" style="cursor:pointer;color:var(--red);font-size:18px;line-height:1;margin-left:3px">×</span></div>`;});chips+='</div>';}
+const d=document.createElement('div');d.className='scard';
+d.innerHTML=`<div class="shead"><span class="slbl">${slot.label}</span>${has?`<span class="badge ok"><i class="ti ti-check" style="font-size:12px"></i>${imgs.length} imagen${imgs.length>1?'es':''}</span>`:`<span class="badge pend"><i class="ti ti-clock" style="font-size:12px"></i>Pendiente</span>`}</div><div class="sdesc">${slot.desc}</div><div class="stags">${tags}</div><div class="az${has?' has':''}">${chips}<div class="add-btn" onclick="openPick('${slot.id}')"><i class="ti ti-photo-plus" style="font-size:16px"></i>${has?'+ Agregar imagen':'Seleccionar imagen(es)'}</div></div>`;
+c.appendChild(d);
+});
+chkAsgn();
 }
+
 function openPick(sid){
-  aSID=sid;tSel=[...(SA[sid]||[])];
-  const name=FORMATS[SF].slots.find(s=>s.id===sid).label;
-  const cards=WI.map((img,i)=>{
-    const isSel=tSel.includes(i);
-    return `<div onclick="togImg(${i})" id="pi-${i}" style="border:2px solid ${isSel?'var(--blue)':'var(--border)'};border-radius:var(--rs);overflow:hidden;cursor:pointer;transition:all .15s;position:relative;background:${isSel?'var(--blue-l)':'var(--surf)'}">
-      ${isSel?`<div class="sb" style="position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1"><i class="ti ti-check"></i></div>`:''}
-      <img src="${img.url}" style="width:100%;height:100px;object-fit:cover;display:block" alt="Img ${i+1}">
-      <div style="font-size:13px;padding:6px 9px;color:var(--text2);background:var(--border-l);font-weight:500">Imagen ${i+1}</div></div>`;
-  }).join('');
-  document.getElementById('mbox').innerHTML=`<div style="font-size:16px;font-weight:600;margin-bottom:6px"><i class="ti ti-photo-search" style="font-size:20px;vertical-align:-3px;margin-right:8px;color:var(--blue)"></i>Seleccionar imágenes</div><div style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Sección: <strong>${name}</strong></div><div class="tip" style="margin-bottom:1rem"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0"></i>Haz clic para marcar/desmarcar. Puedes elegir <strong>varias</strong>.</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">${cards}</div><div style="display:flex;gap:10px;margin-top:1.25rem;flex-wrap:wrap"><button id="cbtn" onclick="confPick()" class="btn primary"><i class="ti ti-check"></i>Confirmar (${tSel.length})</button><button onclick="closeMov()" class="btn"><i class="ti ti-x"></i>Cancelar</button></div>`;
-  document.getElementById('mov').classList.add('open');
+aSID=sid;tSel=[...(SA[sid]||[])];
+const name=FORMATS[SF].slots.find(s=>s.id===sid).label;
+const cards=WI.map((img,i)=>{
+const isSel=tSel.includes(i);
+return `<div onclick="togImg(${i})" id="pi-${i}" style="border:2px solid ${isSel?'var(--blue)':'var(--border)'};border-radius:var(--rs);overflow:hidden;cursor:pointer;transition:all .15s;position:relative;background:${isSel?'var(--blue-l)':'var(--surf)'}">
+${isSel?`<div class="sb" style="position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1"><i class="ti ti-check"></i></div>`:''}
+<img src="${img.url}" style="width:100%;height:100px;object-fit:cover;display:block" alt="Img ${i+1}">
+<div style="font-size:13px;padding:6px 9px;color:var(--text2);background:var(--border-l);font-weight:500">Imagen ${i+1}</div></div>`;
+}).join('');
+document.getElementById('mbox').innerHTML=`<div style="font-size:16px;font-weight:600;margin-bottom:6px"><i class="ti ti-photo-search" style="font-size:20px;vertical-align:-3px;margin-right:8px;color:var(--blue)"></i>Seleccionar imágenes</div><div style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Sección: <strong>${name}</strong></div><div class="tip" style="margin-bottom:1rem"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0"></i>Haz clic para marcar/desmarcar. Puedes elegir <strong>varias</strong>.</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">${cards}</div><div style="display:flex;gap:10px;margin-top:1.25rem;flex-wrap:wrap"><button id="cbtn" onclick="confPick()" class="btn primary"><i class="ti ti-check"></i>Confirmar (${tSel.length})</button><button onclick="closeMov()" class="btn"><i class="ti ti-x"></i>Cancelar</button></div>`;
+document.getElementById('mov').classList.add('open');
 }
+
 function togImg(i){
-  const idx=tSel.indexOf(i);if(idx>=0)tSel.splice(idx,1);else tSel.push(i);
-  const c=document.getElementById('pi-'+i),isSel=tSel.includes(i);
-  c.style.border=`2px solid ${isSel?'var(--blue)':'var(--border)'}`;c.style.background=isSel?'var(--blue-l)':'var(--surf)';
-  const ex=c.querySelector('.sb');if(ex)ex.remove();
-  if(isSel){const b=document.createElement('div');b.className='sb';b.style.cssText='position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1';b.innerHTML='<i class="ti ti-check"></i>';c.appendChild(b);}
-  const btn=document.getElementById('cbtn');if(btn)btn.innerHTML=`<i class="ti ti-check"></i>Confirmar (${tSel.length})`;
+const idx=tSel.indexOf(i);if(idx>=0)tSel.splice(idx,1);else tSel.push(i);
+const c=document.getElementById('pi-'+i),isSel=tSel.includes(i);
+c.style.border=`2px solid ${isSel?'var(--blue)':'var(--border)'}`;c.style.background=isSel?'var(--blue-l)':'var(--surf)';
+const ex=c.querySelector('.sb');if(ex)ex.remove();
+if(isSel){const b=document.createElement('div');b.className='sb';b.style.cssText='position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1';b.innerHTML='<i class="ti ti-check"></i>';c.appendChild(b);}
+const btn=document.getElementById('cbtn');if(btn)btn.innerHTML=`<i class="ti ti-check"></i>Confirmar (${tSel.length})`;
 }
+
 function confPick(){SA[aSID]=[...tSel];closeMov();buildSlots();}
 function rmImg(sid,pos){if(SA[sid])SA[sid].splice(pos,1);buildSlots();}
 function closeMov(){document.getElementById('mov').classList.remove('open');aSID=null;tSel=[];}
 function chkAsgn(){document.getElementById('btn3').disabled=!FORMATS[SF].slots.every(s=>(SA[s.id]||[]).length>0);}
 
-function buildPrompt(labels){
-  return `Eres un experto extrayendo datos de pantallazos de sistemas de gestión médica colombianos (como SISPRO, Gestión Salud, o similares).
+function buildPrompt(labels, isMultiMed=false){
+const medExtra = isMultiMed ? `
+IMPORTANTE - MÚLTIPLES MEDICAMENTOS:
+Esta pantalla puede contener VARIOS medicamentos listados uno debajo del otro.
+Debes extraerlos TODOS como un array JSON llamado "medicamentos".
+Cada elemento del array tiene los campos: ${labels.map(l=>`"${l}"`).join(', ')}.
+Ejemplo de respuesta con 2 medicamentos:
+{"medicamentos":[{"Nombre medicamento":"AMPICILINA 500MG CAPSULA","Dosis":"500","Unidades":"mg","Vía de administración":"V.O.","Frecuencia":"6 Horas","Total dosis a aplicar":"40","Descripción":""},{"Nombre medicamento":"CEFEPIMA 1G POLVO","Dosis":"2","Unidades":"gr","Vía de administración":"Push","Frecuencia":"12 Horas","Total dosis a aplicar":"20","Descripción":""}]}
+` : '';
+
+return `Eres un experto extrayendo datos de pantallazos de sistemas de gestión médica colombianos.
 
 CONTEXTO DEL SISTEMA:
 El sistema tiene DOS tipos de campos visuales:
 
 TIPO 1 — TABLA con encabezados (más común para datos del paciente):
-La pantalla muestra una tabla donde la PRIMERA FILA tiene los nombres de columna y la SEGUNDA FILA (o filas siguientes) tiene los datos reales.
+La pantalla muestra una tabla donde la PRIMERA FILA tiene los nombres de columna y la SEGUNDA FILA tiene los datos reales.
 Ejemplo:
-| Paciente            | Identificación | Dirección          |
-| MARIA JOSE GARCIA   | 1038411860     | CRA 45 # 23-10     |
+| Paciente            | Identificación |
+| MARIA JOSE GARCIA   | 1038411860     |
 → "Paciente" = "MARIA JOSE GARCIA", "Identificación" = "1038411860"
 
 TIPO 2 — CAMPOS FLOTANTES (etiqueta pequeña arriba, valor dentro del recuadro):
 Cada campo tiene una etiqueta diminuta en la esquina superior izquierda del recuadro, y el valor real está DENTRO del recuadro, más grande.
-Ejemplo: recuadro con etiqueta pequeña "Municipio" y dentro el texto grande "RIONEGRO" → "Municipio" = "RIONEGRO"
 IMPORTANTE: El valor es el texto GRANDE dentro del recuadro, NO la etiqueta pequeña.
 
 REGLA CRÍTICA — CAMPO "Paciente":
 - "Paciente" = el nombre completo de la PERSONA ENFERMA que recibe atención médica.
 - Aparece en la tabla PRINCIPAL del sistema, generalmente en la primera fila de datos.
+- En la pantalla pueden aparecer campos llamados "Nombre cuidador" y "Nombre responsable" — estos son personas DISTINTAS al paciente, NUNCA los uses para el campo Paciente.
+- El nombre del Paciente SOLO viene de la tabla con encabezado "Paciente" en la parte superior, no de los campos flotantes de la derecha.
 - NUNCA usar el nombre del cuidador, responsable, acompañante, ni familiar.
-- Si ves secciones separadas como "Datos del cuidador", "Responsable", "Acompañante" → IGNORA esos nombres para el campo Paciente.
-- El paciente es quien tiene la identificación (cédula, tarjeta de identidad) registrada como TITULAR del servicio.
-En la pantalla pueden aparecer campos llamados "Nombre cuidador" y "Nombre responsable" — estos son personas distintas al paciente, NUNCA los uses para el campo Paciente.
-- El nombre del Paciente SOLO viene de la tabla con encabezado "Paciente" en la parte superior de la pantalla, no de los campos flotantes de la derecha.
 
-ALIASES — el sistema puede usar estos nombres alternativos para los campos:
-- "Paciente" → también puede aparecer como: "Nombre paciente", "Nombre", "Nombre completo", "Afiliado", "Beneficiario", "Titular"
-- "Identificación" → también: "Doc.", "Documento", "No. doc", "Cédula", "CC", "ID"  
-- "Dirección atención" → también: "Dirección", "Dir.", "Domicilio", "Dirección de atención"
-- "Municipio" → también: "Ciudad", "Mpio"
-- "Barrio" → también: "Sector", "Localidad"
-- "Teléfono paciente" → también: "Tel.", "Teléfono", "Tel. paciente"
-- "Celular 1 paciente" → también: "Cel.", "Celular", "Cel. 1", "Móvil"
-- "Celular 2 paciente" → también: "Cel. 2", "Celular 2", "Móvil 2"
-- "Nombre medicamento" → también: "Medicamento", "Producto", "Descripción medicamento"
+ALIASES — el sistema puede usar estos nombres alternativos:
+- "Paciente" → también: "Nombre paciente", "Nombre", "Afiliado", "Beneficiario", "Titular"
+- "Identificación" → también: "Doc.", "Documento", "No. doc", "Cédula", "CC", "ID"
+- "Dirección atención" → también: "Dirección", "Dir.", "Domicilio"
+- "Municipio" → también: "Ciudad", "Mpio", "Ciudad principal"
+- "Nombre medicamento" → también: "Medicamento", "Buscar por codigo o nombre", "Producto"
 - "Vía de administración" → también: "Vía", "Via adm."
-- "Frecuencia" → también: "Frec.", "Cada"
-- "Total dosis a aplicar" → también: "Total dosis", "No. dosis", "Cantidad"
-- "Tipo de muestra" → también: "Muestra", "Tipo muestra"
-- "Fecha de toma de muestra" → también: "Fecha muestra", "Fecha toma"
+- "Frecuencia" → también: "Frecuencias", "Frec.", "Cada"
+- "Total dosis a aplicar" → también: "Total dosis", "No. dosis"
+${medExtra}
+${isMultiMed ? 'Devuelve SOLO el JSON con la clave "medicamentos" como array. Sin backticks ni texto adicional.' : `CAMPOS A EXTRAER: ${labels.map(l=>`"${l}"`).join(', ')}
 
-CAMPOS A EXTRAER: ${labels.map(l=>`"${l}"`).join(', ')}
-
-REGLAS DE RESPUESTA:
-1. Devuelve SOLO el objeto JSON, sin backticks, sin texto adicional, sin explicaciones.
-2. Extrae el VALOR real del dato, nunca el nombre del campo ni la etiqueta.
-3. Si un campo no está visible en esta imagen, usa "" (cadena vacía).
-4. Incluye TODOS los campos solicitados en el JSON, aunque estén vacíos.
-5. Para nombres de personas: escríbelos en MAYÚSCULAS tal como aparecen en pantalla.
-6. Para números de identificación: solo dígitos, sin puntos ni comas.
-7. Para teléfonos: incluye el número completo tal como aparece.
+REGLAS:
+1. Devuelve SOLO el objeto JSON, sin backticks ni texto adicional.
+2. Extrae el VALOR real del dato, nunca el nombre del campo.
+3. Si un campo no está visible usa "".
+4. Incluye TODOS los campos en el JSON.`}
 
 JSON:`;
 }
+
 async function runExt(){
-  goSt(4);
-  const fmt=FORMATS[SF],sb=document.getElementById('sbar-msg'),st=document.getElementById('sbar-txt');
-  ED={};
-  for(const slot of fmt.slots){
-    const idxs=SA[slot.id]||[];if(!idxs.length)continue;
-    sb.style.display='flex';sb.className='sbar loading';
-    const labels=[];
-    slot.fields.forEach(f=>{if(f.combined)f.combined.forEach(l=>labels.push(l));else labels.push(f.l);});
-    const res={};
-    for(let pos=0;pos<idxs.length;pos++){
-      const img=WI[idxs[pos]];
-      st.textContent=`Analizando "${slot.label}" — imagen ${pos+1} de ${idxs.length}...`;
-      try{
-        const r=await fetch(API_URL,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            model:'claude-sonnet-4-5',
-            max_tokens:1500,
-            messages:[{role:'user',content:[
-              {type:'image',source:{type:'base64',media_type:img.mime,data:img.b64}},
-              {type:'text',text:buildPrompt(labels)}
-            ]}]
-          })
-        });
-        const data=await r.json();
-        if(data.error) throw new Error(data.error.message);
-        const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-        const parsed=JSON.parse(raw);
-        Object.keys(parsed).forEach(lbl=>{const v=(parsed[lbl]||'').toString().trim();if(v&&v!==lbl)res[lbl]=v;});
-      }catch(e){
-        sb.className='sbar error';
-        st.textContent=`Error imagen ${pos+1}: ${e.message}`;
-        await new Promise(r=>setTimeout(r,2500));
-        sb.className='sbar loading';
-      }
-    }
-    slot.fields.forEach(f=>{
-      if(f.combined){const vals=f.combined.map(l=>res[l]||'').filter(v=>v.trim()!=='');ED[f.k]=vals.join(' / ');}
-      else ED[f.k]=res[f.l]||'';
-    });
-  }
-  if(fmt.extra)fmt.extra.forEach(f=>{ED[f.k]=f.auto?f.val:'';});
-  sb.style.display='none';
-  if(SF==='laboratorios'){document.getElementById('lab-prev-sec').style.display='block';updLabPrev();}
-  renderFields();
+goSt(4);
+const fmt=FORMATS[SF],sb=document.getElementById('sbar-msg'),st=document.getElementById('sbar-txt');
+ED={};MEDS=[];
+
+for(const slot of fmt.slots){
+const idxs=SA[slot.id]||[];if(!idxs.length)continue;
+sb.style.display='flex';sb.className='sbar loading';
+
+const labels=[];
+slot.fields.forEach(f=>{if(f.combined)f.combined.forEach(l=>labels.push(l));else labels.push(f.l);});
+
+const isMedSlot=!!slot.isMed;
+const res={};
+
+for(let pos=0;pos<idxs.length;pos++){
+const img=WI[idxs[pos]];
+st.textContent=`Analizando "${slot.label}" — imagen ${pos+1} de ${idxs.length}...`;
+try{
+const r=await fetch(API_URL,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+model:'claude-sonnet-4-5',
+max_tokens:2000,
+messages:[{role:'user',content:[
+{type:'image',source:{type:'base64',media_type:img.mime,data:img.b64}},
+{type:'text',text:buildPrompt(labels, isMedSlot)}
+]}]
+})
+});
+const data=await r.json();
+if(data.error) throw new Error(data.error.message);
+const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+const parsed=JSON.parse(raw);
+
+if(isMedSlot && parsed.medicamentos && Array.isArray(parsed.medicamentos)){
+// Agregar cada medicamento al array global MEDS
+parsed.medicamentos.forEach(med=>{
+if(med['Nombre medicamento'] && med['Nombre medicamento'].trim()!==''){
+MEDS.push({
+medicamento: med['Nombre medicamento']||'',
+dosis: med['Dosis']||'',
+unidades: med['Unidades']||'',
+via: med['Vía de administración']||'',
+frecuencia: med['Frecuencia']||'',
+total_dosis: med['Total dosis a aplicar']||'',
+descripcion: med['Descripción']||''
+});
+}
+});
+} else if(!isMedSlot){
+Object.keys(parsed).forEach(lbl=>{const v=(parsed[lbl]||'').toString().trim();if(v&&v!==lbl)res[lbl]=v;});
+}
+}catch(e){
+sb.className='sbar error';
+st.textContent=`Error imagen ${pos+1}: ${e.message}`;
+await new Promise(r=>setTimeout(r,2500));
+sb.className='sbar loading';
+}
+}
+
+if(!isMedSlot){
+slot.fields.forEach(f=>{
+if(f.combined){const vals=f.combined.map(l=>res[l]||'').filter(v=>v.trim()!=='');ED[f.k]=vals.join(' / ');}
+else ED[f.k]=res[f.l]||'';
+});
+}
+}
+
+if(fmt.extra)fmt.extra.forEach(f=>{ED[f.k]=f.auto?f.val:'';});
+sb.style.display='none';
+
+if(SF==='laboratorios'){document.getElementById('lab-prev-sec').style.display='block';updLabPrev();}
+renderFields();
 }
 
 function updLabPrev(){
-  document.getElementById('lab-prev').innerHTML=`<table>
-    <tr><td colspan="4" class="tit">PROGRAMACIÓN DE LABORATORIO</td></tr>
-    <tr><td class="lbl">Paciente:</td><td class="val">${ED.paciente||''}</td><td class="lbl">Identificación:</td><td class="val">${ED.identificacion||''}</td></tr>
-    <tr><td class="lbl">Dirección de atención:</td><td class="val">${ED.direccion||''}</td><td class="lbl">Municipio:</td><td class="val">${ED.municipio||''}</td></tr>
-    <tr><td class="lbl">Barrio:</td><td class="val">${ED.barrio||''}</td><td colspan="2" class="lbl">Tel. paciente - Cel. 1, Cel. 2:<br><span class="val">${ED.telefonos||''}</span></td></tr>
-    <tr><td class="lbl">Persona que programa:</td><td class="val">${ED.persona_programa||''}</td><td class="lbl">Fecha de programación:</td><td class="val">${ED.fecha_prog||''}</td></tr>
-  </table>`;
+document.getElementById('lab-prev').innerHTML=`<table>
+<tr><td colspan="4" class="tit">PROGRAMACIÓN DE LABORATORIO</td></tr>
+<tr><td class="lbl">Paciente:</td><td class="val">${ED.paciente||''}</td><td class="lbl">Identificación:</td><td class="val">${ED.identificacion||''}</td></tr>
+<tr><td class="lbl">Dirección de atención:</td><td class="val">${ED.direccion||''}</td><td class="lbl">Municipio:</td><td class="val">${ED.municipio||''}</td></tr>
+<tr><td class="lbl">Barrio:</td><td class="val">${ED.barrio||''}</td><td colspan="2" class="lbl">Tel. paciente - Cel. 1, Cel. 2:<br><span class="val">${ED.telefonos||''}</span></td></tr>
+<tr><td class="lbl">Persona que programa:</td><td class="val">${ED.persona_programa||''}</td><td class="lbl">Fecha de programación:</td><td class="val">${ED.fecha_prog||''}</td></tr>
+</table>`;
 }
 
 function renderFields(){
-  const fmt=FORMATS[SF],area=document.getElementById('farea');area.innerHTML='';
-  const secs=[];
-  fmt.slots.forEach(s=>secs.push({g:s.label,fields:s.fields}));
-  if(fmt.extra)secs.push({g:'Datos adicionales',fields:fmt.extra});
-  secs.forEach(sec=>{
-    const g=document.createElement('div');g.className='gtitle';
-    g.innerHTML=`<i class="ti ti-point-filled" style="font-size:13px;color:var(--blue)"></i>${sec.g}`;
-    area.appendChild(g);
-    sec.fields.forEach(f=>{
-      const val=ED[f.k]||'',isMn=!!f.m,isAu=!!f.auto,isTa=!!f.ta;
-      const bdg=isAu?`<span class="badge auto"><i class="ti ti-calendar" style="font-size:11px"></i>Automático</span>`:f.ai?`<span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span>`:`<span class="badge manual"><i class="ti ti-pencil" style="font-size:11px"></i>Completar manual</span>`;
-      const cls='fi'+(isMn?' manual':(isAu?' auto':''));
-      const row=document.createElement('div');row.className='frow';
-      const lc=document.createElement('div');lc.innerHTML=`<div class="flbl">${f.l}</div><div class="fbdg">${bdg}</div>`;
-      const ic=document.createElement('div');
-      if(isTa)ic.innerHTML=`<textarea id="ef-${f.k}" rows="4" class="${cls}" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:14px;padding:8px 12px;border-radius:var(--rs);border:1.5px solid ${isMn?'var(--orange-m)':'var(--border)'};width:100%;color:var(--text);background:${isMn?'#FFFBF4':'var(--surf)'}">${val}</textarea>`;
-      else ic.innerHTML=`<input id="ef-${f.k}" type="text" value="${(val+'').replace(/"/g,'&quot;')}" class="${cls}" ${isAu?'readonly':''}>`;
-      row.appendChild(lc);row.appendChild(ic);area.appendChild(row);
-      const sep=document.createElement('div');sep.className='fsep';area.appendChild(sep);
-      const el=ic.querySelector('input,textarea');
-      if(el)el.addEventListener('input',()=>{ED[f.k]=el.value;if(SF==='laboratorios')updLabPrev();});
-    });
-  });
+const fmt=FORMATS[SF],area=document.getElementById('farea');area.innerHTML='';
+const secs=[];
+fmt.slots.forEach(s=>{if(!s.isMed)secs.push({g:s.label,fields:s.fields});});
+if(fmt.extra)secs.push({g:'Datos adicionales',fields:fmt.extra});
+
+secs.forEach(sec=>{
+const g=document.createElement('div');g.className='gtitle';
+g.innerHTML=`<i class="ti ti-point-filled" style="font-size:13px;color:var(--blue)"></i>${sec.g}`;
+area.appendChild(g);
+sec.fields.forEach(f=>{
+const val=ED[f.k]||'',isMn=!!f.m,isAu=!!f.auto,isTa=!!f.ta;
+const bdg=isAu?`<span class="badge auto"><i class="ti ti-calendar" style="font-size:11px"></i>Automático</span>`:f.ai?`<span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span>`:`<span class="badge manual"><i class="ti ti-pencil" style="font-size:11px"></i>Completar manual</span>`;
+const cls='fi'+(isMn?' manual':(isAu?' auto':''));
+const row=document.createElement('div');row.className='frow';
+const lc=document.createElement('div');lc.innerHTML=`<div class="flbl">${f.l}</div><div class="fbdg">${bdg}</div>`;
+const ic=document.createElement('div');
+if(isTa)ic.innerHTML=`<textarea id="ef-${f.k}" rows="4" class="${cls}" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:14px;padding:8px 12px;border-radius:var(--rs);border:1.5px solid ${isMn?'var(--orange-m)':'var(--border)'};width:100%;color:var(--text);background:${isMn?'#FFFBF4':'var(--surf)'}">${val}</textarea>`;
+else ic.innerHTML=`<input id="ef-${f.k}" type="text" value="${(val+'').replace(/"/g,'&quot;')}" class="${cls}" ${isAu?'readonly':''}>`;
+row.appendChild(lc);row.appendChild(ic);area.appendChild(row);
+const sep=document.createElement('div');sep.className='fsep';area.appendChild(sep);
+const el=ic.querySelector('input,textarea');
+if(el)el.addEventListener('input',()=>{ED[f.k]=el.value;if(SF==='laboratorios')updLabPrev();});
+});
+});
+
+// Renderizar sección de medicamentos si aplica
+const hasMedSlot=fmt.slots.some(s=>s.isMed);
+if(hasMedSlot && MEDS.length>0){
+const mg=document.createElement('div');mg.className='gtitle';
+mg.innerHTML=`<i class="ti ti-point-filled" style="font-size:13px;color:var(--blue)"></i>Medicamentos (${MEDS.length} encontrado${MEDS.length>1?'s':''})`;
+area.appendChild(mg);
+
+MEDS.forEach((med,idx)=>{
+const block=document.createElement('div');block.className='med-block';
+block.innerHTML=`<div class="med-block-title"><i class="ti ti-pill" style="font-size:14px"></i>Medicamento ${idx+1}</div>`;
+const medFields=[
+{k:'medicamento',l:'Nombre medicamento'},{k:'dosis',l:'Dosis'},{k:'unidades',l:'Unidades'},
+{k:'via',l:'Vía de administración'},{k:'frecuencia',l:'Frecuencia'},
+{k:'total_dosis',l:'Total dosis a aplicar'},{k:'descripcion',l:'Descripción'}
+];
+medFields.forEach(f=>{
+const row=document.createElement('div');row.className='frow';
+const lc=document.createElement('div');lc.innerHTML=`<div class="flbl">${f.l}</div><div class="fbdg"><span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span></div>`;
+const ic=document.createElement('div');ic.innerHTML=`<input id="ef-med${idx}-${f.k}" type="text" value="${(med[f.k]||'').replace(/"/g,'&quot;')}" class="fi">`;
+row.appendChild(lc);row.appendChild(ic);block.appendChild(row);
+const sep=document.createElement('div');sep.className='fsep';block.appendChild(sep);
+const el=ic.querySelector('input');
+if(el)el.addEventListener('input',()=>{MEDS[idx][f.k]=el.value;});
+});
+area.appendChild(block);
+});
+}
 }
 
 function dlExcel(){
-  const fmt=FORMATS[SF];
-  const allF=[];fmt.slots.forEach(s=>s.fields.forEach(f=>allF.push(f)));if(fmt.extra)fmt.extra.forEach(f=>allF.push(f));
-  allF.forEach(f=>{const el=document.getElementById('ef-'+f.k);if(el)ED[f.k]=el.value||'';});
-  SF==='laboratorios'?dlLab():dlGen(fmt,allF);goSt(5);
+const fmt=FORMATS[SF];
+// Leer campos generales
+const allF=[];
+fmt.slots.forEach(s=>{if(!s.isMed)s.fields.forEach(f=>allF.push(f));});
+if(fmt.extra)fmt.extra.forEach(f=>allF.push(f));
+allF.forEach(f=>{const el=document.getElementById('ef-'+f.k);if(el)ED[f.k]=el.value||'';});
+
+// Leer medicamentos editados
+const hasMedSlot=fmt.slots.some(s=>s.isMed);
+if(hasMedSlot){
+MEDS.forEach((med,idx)=>{
+['medicamento','dosis','unidades','via','frecuencia','total_dosis','descripcion'].forEach(k=>{
+const el=document.getElementById(`ef-med${idx}-${k}`);if(el)MEDS[idx][k]=el.value||'';
+});
+});
 }
+
+SF==='laboratorios'?dlLab():dlGen(fmt,allF);goSt(5);
+}
+
+// Estilo base para celdas Excel
+const cellStyle=(bold,bg,center,wrap)=>({
+font:{bold:!!bold,sz:11},
+fill:{fgColor:{rgb:bg||'FFFFFF'}},
+alignment:{horizontal:center?'center':'left',vertical:'center',wrapText:!!wrap},
+border:{top:{style:'thin',color:{rgb:'CCCCCC'}},bottom:{style:'thin',color:{rgb:'CCCCCC'}},left:{style:'thin',color:{rgb:'CCCCCC'}},right:{style:'thin',color:{rgb:'CCCCCC'}}}
+});
+
+function setCell(ws,r,c,v,bold,bg,center,wrap){
+const ref=XLSX.utils.encode_cell({r,c});
+ws[ref]={v:v||'',t:'s',s:cellStyle(bold,bg,center,wrap)};
+}
+
 function dlLab(){
-  const wb=XLSX.utils.book_new(),ws={};
-  const sc=(r,c,v,bold,bg,al,wr)=>{const ref=XLSX.utils.encode_cell({r,c});ws[ref]={v:v||'',t:'s',s:{font:{bold:!!bold,sz:11},fill:{fgColor:{rgb:bg||'FFFFFF'}},alignment:{horizontal:al||'left',vertical:'center',wrapText:!!wr},border:{top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}}}};};
-  sc(0,0,'PROGRAMACIÓN DE LABORATORIO',true,'D9E8F8','center');sc(0,1,'',false,'D9E8F8');sc(0,2,'',false,'D9E8F8');sc(0,3,'',false,'D9E8F8');
-  sc(1,0,'Paciente:',true,'F5F7FA');sc(1,1,ED.paciente||'');sc(1,2,'Identificación:',true,'F5F7FA');sc(1,3,ED.identificacion||'');
-  sc(2,0,'Dirección de atención:',true,'F5F7FA');sc(2,1,ED.direccion||'');sc(2,2,'Municipio:',true,'F5F7FA');sc(2,3,ED.municipio||'');
-  sc(3,0,'Barrio:',true,'F5F7FA');sc(3,1,ED.barrio||'');sc(3,2,'Teléfono del paciente-Celular 1 paciente, Celular 2 paciente:\n'+(ED.telefonos||''),true,'F5F7FA','left',true);sc(3,3,'',false,'F5F7FA');
-  sc(4,0,'Persona que programa:',true,'F5F7FA');sc(4,1,ED.persona_programa||'');sc(4,2,'Fecha de programación:',true,'F5F7FA');sc(4,3,ED.fecha_prog||'');
-  ws['!ref']='A1:D5';ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}},{s:{r:3,c:2},e:{r:3,c:3}}];
-  ws['!cols']=[{wch:26},{wch:32},{wch:42},{wch:28}];ws['!rows']=[{hpt:26},{hpt:22},{hpt:22},{hpt:48},{hpt:22}];
-  XLSX.utils.book_append_sheet(wb,ws,'Programación Laboratorio');XLSX.writeFile(wb,`laboratorios_${fd()}.xlsx`);
+const wb=XLSX.utils.book_new(),ws={};
+setCell(ws,0,0,'PROGRAMACIÓN DE LABORATORIO',true,'185FA5',true);
+setCell(ws,0,1,'',false,'185FA5',true);setCell(ws,0,2,'',false,'185FA5',true);setCell(ws,0,3,'',false,'185FA5',true);
+setCell(ws,1,0,'Paciente:',true,'D9E8F8',false);setCell(ws,1,1,ED.paciente||'',false,null,true);
+setCell(ws,1,2,'Identificación:',true,'D9E8F8',false);setCell(ws,1,3,ED.identificacion||'',false,null,true);
+setCell(ws,2,0,'Dirección de atención:',true,'D9E8F8',false);setCell(ws,2,1,ED.direccion||'',false,null,true);
+setCell(ws,2,2,'Municipio:',true,'D9E8F8',false);setCell(ws,2,3,ED.municipio||'',false,null,true);
+setCell(ws,3,0,'Barrio:',true,'D9E8F8',false);setCell(ws,3,1,ED.barrio||'',false,null,true);
+setCell(ws,3,2,'Tel. paciente / Cel. 1 / Cel. 2:',true,'D9E8F8',false,true);setCell(ws,3,3,ED.telefonos||'',false,null,true);
+setCell(ws,4,0,'Persona que programa:',true,'D9E8F8',false);setCell(ws,4,1,ED.persona_programa||'',false,null,true);
+setCell(ws,4,2,'Fecha de programación:',true,'D9E8F8',false);setCell(ws,4,3,ED.fecha_prog||'',false,null,true);
+ws['!ref']='A1:D5';ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}}];
+ws['!cols']=[{wch:26},{wch:32},{wch:28},{wch:28}];ws['!rows']=[{hpt:26},{hpt:22},{hpt:22},{hpt:28},{hpt:22}];
+XLSX.utils.book_append_sheet(wb,ws,'Programación Laboratorio');XLSX.writeFile(wb,`laboratorios_${fd()}.xlsx`);
 }
+
 function dlGen(fmt,allF){
-  const h=allF.map(f=>f.l),v=allF.map(f=>ED[f.k]||'');
-  const ws=XLSX.utils.aoa_to_sheet([h,v]);
-  ws['!cols']=h.map(x=>({wch:Math.max(x.length+5,22)}));
-  h.forEach((x,i)=>{const c=XLSX.utils.encode_cell({r:0,c:i});if(!ws[c])return;ws[c].s={font:{bold:true,color:{rgb:'FFFFFF'},sz:12},fill:{fgColor:{rgb:'185FA5'}},alignment:{horizontal:'center',wrapText:true}};});
-  ws['!rows']=[{hpt:24},{hpt:20}];
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,fmt.name.substring(0,31));
-  XLSX.writeFile(wb,`${SF}_${fd()}.xlsx`);
+const wb=XLSX.utils.book_new();
+const hasMedSlot=fmt.slots.some(s=>s.isMed);
+
+// Hoja de datos del paciente
+const patientFields=allF.filter(f=>f.k!=='medicamento'&&f.k!=='dosis'&&f.k!=='unidades'&&f.k!=='via'&&f.k!=='frecuencia'&&f.k!=='total_dosis'&&f.k!=='descripcion');
+if(patientFields.length>0){
+const ws={};
+const headers=patientFields.map(f=>f.l);
+headers.forEach((h,c)=>{
+setCell(ws,0,c,h,true,'185FA5',true);
+});
+patientFields.forEach((f,c)=>{
+setCell(ws,1,c,ED[f.k]||'',false,null,true);
+});
+ws['!ref']=`A1:${XLSX.utils.encode_col(patientFields.length-1)}2`;
+ws['!cols']=headers.map(x=>({wch:Math.max(x.length+4,18)}));
+ws['!rows']=[{hpt:26},{hpt:20}];
+XLSX.utils.book_append_sheet(wb,ws,'Datos Paciente');
 }
+
+// Hoja de medicamentos (una fila por medicamento)
+if(hasMedSlot && MEDS.length>0){
+const ws={};
+const medHeaders=['Paciente','Identificación','Nombre medicamento','Dosis','Unidades','Vía de administración','Frecuencia','Total dosis a aplicar','Descripción'];
+medHeaders.forEach((h,c)=>{
+setCell(ws,0,c,h,true,'185FA5',true);
+});
+MEDS.forEach((med,row)=>{
+const vals=[ED.paciente||'',ED.identificacion||'',med.medicamento,med.dosis,med.unidades,med.via,med.frecuencia,med.total_dosis,med.descripcion];
+vals.forEach((v,c)=>{
+setCell(ws,row+1,c,v,false,row%2===0?'F7F9FC':'FFFFFF',true);
+});
+});
+const lastRow=MEDS.length;
+ws['!ref']=`A1:I${lastRow+1}`;
+ws['!cols']=[{wch:28},{wch:16},{wch:40},{wch:10},{wch:12},{wch:22},{wch:14},{wch:18},{wch:30}];
+ws['!rows']=[{hpt:26},...MEDS.map(()=>({hpt:20}))];
+XLSX.utils.book_append_sheet(wb,ws,'Medicamentos');
+}
+
+XLSX.writeFile(wb,`${SF}_${fd()}.xlsx`);
+}
+
 function fd(){return String(today.getFullYear())+String(today.getMonth()+1).padStart(2,'0')+String(today.getDate()).padStart(2,'0');}
+
 function resetAll(){
-  SF=null;WI=[];SA={};ED={};wordInput.value='';
-  document.getElementById('winfo').innerHTML='';document.getElementById('wimgs').style.display='none';
-  document.getElementById('wnoimg').style.display='none';dropWord.style.display='block';
-  document.getElementById('btn2').disabled=true;
-  document.querySelectorAll('.fc').forEach(c=>c.classList.remove('sel'));
-  document.getElementById('btn1').disabled=true;
-  document.getElementById('lab-prev-sec').style.display='none';
-  goSt(1);
+SF=null;WI=[];SA={};ED={};MEDS=[];wordInput.value='';
+document.getElementById('winfo').innerHTML='';document.getElementById('wimgs').style.display='none';
+document.getElementById('wnoimg').style.display='none';dropWord.style.display='block';
+document.getElementById('btn2').disabled=true;
+document.querySelectorAll('.fc').forEach(c=>c.classList.remove('sel'));
+document.getElementById('btn1').disabled=true;
+document.getElementById('lab-prev-sec').style.display='none';
+goSt(1);
 }
 </script>
 </body>
