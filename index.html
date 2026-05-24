@@ -117,7 +117,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .lab-prev .tit{text-align:center;font-weight:700;font-size:14px;background:var(--border-l);padding:10px;letter-spacing:.04em}
 .lab-prev .lbl{font-weight:600;color:var(--text2);background:#FAFBFC}
 .lab-prev .val{color:var(--blue-d);font-weight:500}
-.med-block{border:1px solid var(--border);border-radius:var(--rs);padding:1rem;margin-bottom:12px;background:var(--border-l)}
+.med-block{border:1px solid var(--border);border-radius:var(--rs);padding:1rem;margin-bottom:12px;background:#F8FAFF}
 .med-block-title{font-size:13px;font-weight:700;color:var(--blue-d);margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .succ{text-align:center;padding:2rem 1rem}
 .succ-icon{width:64px;height:64px;background:var(--green-l);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--green);margin:0 auto 1.25rem}
@@ -268,7 +268,6 @@ if(s) s.className='st'+(i===n?' active':(i<n?' done':''));
 if(n===3) buildSlots();
 window.scrollTo({top:0,behavior:'smooth'});
 }
-
 function navSt(n){const s=document.getElementById('st'+n);if(s&&(s.classList.contains('done')||s.classList.contains('active')))goSt(n);}
 
 document.getElementById('fgrid').addEventListener('click',function(e){
@@ -314,7 +313,6 @@ info.innerHTML=`<div class="alert error"><i class="ti ti-alert-circle" style="fo
 dropWord.style.display='block';
 }
 }
-
 function resetWord(){WI=[];SA={};wordInput.value='';document.getElementById('winfo').innerHTML='';document.getElementById('wimgs').style.display='none';document.getElementById('wnoimg').style.display='none';dropWord.style.display='block';document.getElementById('btn2').disabled=true;}
 
 let aSID=null,tSel=[];
@@ -345,7 +343,6 @@ ${isSel?`<div class="sb" style="position:absolute;top:5px;right:5px;width:20px;h
 document.getElementById('mbox').innerHTML=`<div style="font-size:16px;font-weight:600;margin-bottom:6px"><i class="ti ti-photo-search" style="font-size:20px;vertical-align:-3px;margin-right:8px;color:var(--blue)"></i>Seleccionar imágenes</div><div style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Sección: <strong>${name}</strong></div><div class="tip" style="margin-bottom:1rem"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0"></i>Haz clic para marcar/desmarcar. Puedes elegir <strong>varias</strong>.</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">${cards}</div><div style="display:flex;gap:10px;margin-top:1.25rem;flex-wrap:wrap"><button id="cbtn" onclick="confPick()" class="btn primary"><i class="ti ti-check"></i>Confirmar (${tSel.length})</button><button onclick="closeMov()" class="btn"><i class="ti ti-x"></i>Cancelar</button></div>`;
 document.getElementById('mov').classList.add('open');
 }
-
 function togImg(i){
 const idx=tSel.indexOf(i);if(idx>=0)tSel.splice(idx,1);else tSel.push(i);
 const c=document.getElementById('pi-'+i),isSel=tSel.includes(i);
@@ -354,62 +351,65 @@ const ex=c.querySelector('.sb');if(ex)ex.remove();
 if(isSel){const b=document.createElement('div');b.className='sb';b.style.cssText='position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1';b.innerHTML='<i class="ti ti-check"></i>';c.appendChild(b);}
 const btn=document.getElementById('cbtn');if(btn)btn.innerHTML=`<i class="ti ti-check"></i>Confirmar (${tSel.length})`;
 }
-
 function confPick(){SA[aSID]=[...tSel];closeMov();buildSlots();}
 function rmImg(sid,pos){if(SA[sid])SA[sid].splice(pos,1);buildSlots();}
 function closeMov(){document.getElementById('mov').classList.remove('open');aSID=null;tSel=[];}
 function chkAsgn(){document.getElementById('btn3').disabled=!FORMATS[SF].slots.every(s=>(SA[s.id]||[]).length>0);}
 
-function buildPrompt(labels, isMultiMed=false){
-const medExtra = isMultiMed ? `
-IMPORTANTE - MÚLTIPLES MEDICAMENTOS:
-Esta pantalla puede contener VARIOS medicamentos listados uno debajo del otro.
-Debes extraerlos TODOS como un array JSON llamado "medicamentos".
-Cada elemento del array tiene los campos: ${labels.map(l=>`"${l}"`).join(', ')}.
-Ejemplo de respuesta con 2 medicamentos:
-{"medicamentos":[{"Nombre medicamento":"AMPICILINA 500MG CAPSULA","Dosis":"500","Unidades":"mg","Vía de administración":"V.O.","Frecuencia":"6 Horas","Total dosis a aplicar":"40","Descripción":""},{"Nombre medicamento":"CEFEPIMA 1G POLVO","Dosis":"2","Unidades":"gr","Vía de administración":"Push","Frecuencia":"12 Horas","Total dosis a aplicar":"20","Descripción":""}]}
-` : '';
+function buildPrompt(labels,isMedSlot){
+if(isMedSlot){
+return `Eres un experto extrayendo datos de pantallazos de sistemas médicos colombianos.
 
+Esta pantalla muestra medicamentos prescritos. Puede haber UNO o VARIOS medicamentos listados uno debajo del otro.
+
+Extrae TODOS los medicamentos que veas. Cada medicamento tiene estos campos:
+- "Nombre medicamento": nombre completo del medicamento (campo "Buscar por codigo o nombre" o similar)
+- "Dosis": valor numérico de la dosis
+- "Unidades": unidad (mg, gr, ml, etc)
+- "Vía de administración": vía (V.O., Push, IV, etc)
+- "Frecuencia": cada cuánto se aplica (6 Horas, 12 Horas, etc)
+- "Total dosis a aplicar": número total de dosis
+- "Descripción": descripción adicional si hay, si no ""
+
+Devuelve SOLO este JSON sin backticks ni texto adicional:
+{"medicamentos":[{"Nombre medicamento":"...","Dosis":"...","Unidades":"...","Vía de administración":"...","Frecuencia":"...","Total dosis a aplicar":"...","Descripción":""}]}
+
+Si solo hay un medicamento, el array tendrá un solo elemento.
+JSON:`;
+}
 return `Eres un experto extrayendo datos de pantallazos de sistemas de gestión médica colombianos.
 
 CONTEXTO DEL SISTEMA:
 El sistema tiene DOS tipos de campos visuales:
 
-TIPO 1 — TABLA con encabezados (más común para datos del paciente):
-La pantalla muestra una tabla donde la PRIMERA FILA tiene los nombres de columna y la SEGUNDA FILA tiene los datos reales.
-Ejemplo:
-| Paciente            | Identificación |
-| MARIA JOSE GARCIA   | 1038411860     |
-→ "Paciente" = "MARIA JOSE GARCIA", "Identificación" = "1038411860"
+TIPO 1 — TABLA con encabezados:
+Primera fila = nombres de columna, segunda fila = datos reales.
+Ejemplo: | Paciente | Identificación | → | MARIA GARCIA | 1038411860 |
 
-TIPO 2 — CAMPOS FLOTANTES (etiqueta pequeña arriba, valor dentro del recuadro):
-Cada campo tiene una etiqueta diminuta en la esquina superior izquierda del recuadro, y el valor real está DENTRO del recuadro, más grande.
-IMPORTANTE: El valor es el texto GRANDE dentro del recuadro, NO la etiqueta pequeña.
+TIPO 2 — CAMPOS FLOTANTES:
+Etiqueta pequeña arriba del recuadro, valor grande dentro del recuadro.
 
 REGLA CRÍTICA — CAMPO "Paciente":
-- "Paciente" = el nombre completo de la PERSONA ENFERMA que recibe atención médica.
-- Aparece en la tabla PRINCIPAL del sistema, generalmente en la primera fila de datos.
-- En la pantalla pueden aparecer campos llamados "Nombre cuidador" y "Nombre responsable" — estos son personas DISTINTAS al paciente, NUNCA los uses para el campo Paciente.
-- El nombre del Paciente SOLO viene de la tabla con encabezado "Paciente" en la parte superior, no de los campos flotantes de la derecha.
-- NUNCA usar el nombre del cuidador, responsable, acompañante, ni familiar.
+- Es el nombre de la PERSONA ENFERMA, viene de la tabla principal superior.
+- NUNCA usar "Nombre cuidador" ni "Nombre responsable" para el campo Paciente.
+- Ignorar completamente las secciones de cuidador/responsable/acompañante.
 
-ALIASES — el sistema puede usar estos nombres alternativos:
-- "Paciente" → también: "Nombre paciente", "Nombre", "Afiliado", "Beneficiario", "Titular"
-- "Identificación" → también: "Doc.", "Documento", "No. doc", "Cédula", "CC", "ID"
-- "Dirección atención" → también: "Dirección", "Dir.", "Domicilio"
-- "Municipio" → también: "Ciudad", "Mpio", "Ciudad principal"
-- "Nombre medicamento" → también: "Medicamento", "Buscar por codigo o nombre", "Producto"
-- "Vía de administración" → también: "Vía", "Via adm."
-- "Frecuencia" → también: "Frecuencias", "Frec.", "Cada"
-- "Total dosis a aplicar" → también: "Total dosis", "No. dosis"
-${medExtra}
-${isMultiMed ? 'Devuelve SOLO el JSON con la clave "medicamentos" como array. Sin backticks ni texto adicional.' : `CAMPOS A EXTRAER: ${labels.map(l=>`"${l}"`).join(', ')}
+ALIASES:
+- "Paciente" → "Nombre paciente","Afiliado","Beneficiario","Titular"
+- "Identificación" → "Doc.","Documento","Cédula","CC"
+- "Dirección atención" → "Dirección","Domicilio","Dirección de atención"
+- "Municipio" → "Ciudad","Mpio","Ciudad principal"
+- "Teléfono paciente" → "Tel.","Teléfono"
+- "Celular 1 paciente" → "Cel.","Cel. 1","Celular"
+- "Celular 2 paciente" → "Cel. 2","Celular 2"
+
+CAMPOS A EXTRAER: ${labels.map(l=>`"${l}"`).join(', ')}
 
 REGLAS:
-1. Devuelve SOLO el objeto JSON, sin backticks ni texto adicional.
-2. Extrae el VALOR real del dato, nunca el nombre del campo.
-3. Si un campo no está visible usa "".
-4. Incluye TODOS los campos en el JSON.`}
+1. Devuelve SOLO el JSON sin backticks ni texto adicional.
+2. Extrae el VALOR real, nunca el nombre del campo.
+3. Si no encuentras un campo usa "".
+4. Incluye TODOS los campos.
 
 JSON:`;
 }
@@ -422,11 +422,9 @@ ED={};MEDS=[];
 for(const slot of fmt.slots){
 const idxs=SA[slot.id]||[];if(!idxs.length)continue;
 sb.style.display='flex';sb.className='sbar loading';
-
+const isMedSlot=!!slot.isMed;
 const labels=[];
 slot.fields.forEach(f=>{if(f.combined)f.combined.forEach(l=>labels.push(l));else labels.push(f.l);});
-
-const isMedSlot=!!slot.isMed;
 const res={};
 
 for(let pos=0;pos<idxs.length;pos++){
@@ -434,48 +432,34 @@ const img=WI[idxs[pos]];
 st.textContent=`Analizando "${slot.label}" — imagen ${pos+1} de ${idxs.length}...`;
 try{
 const r=await fetch(API_URL,{
-method:'POST',
-headers:{'Content-Type':'application/json'},
+method:'POST',headers:{'Content-Type':'application/json'},
 body:JSON.stringify({
 model:'claude-sonnet-4-5',
 max_tokens:2000,
 messages:[{role:'user',content:[
 {type:'image',source:{type:'base64',media_type:img.mime,data:img.b64}},
-{type:'text',text:buildPrompt(labels, isMedSlot)}
+{type:'text',text:buildPrompt(labels,isMedSlot)}
 ]}]
 })
 });
 const data=await r.json();
-if(data.error) throw new Error(data.error.message);
+if(data.error)throw new Error(data.error.message);
 const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
 const parsed=JSON.parse(raw);
-
-if(isMedSlot && parsed.medicamentos && Array.isArray(parsed.medicamentos)){
-// Agregar cada medicamento al array global MEDS
+if(isMedSlot&&parsed.medicamentos&&Array.isArray(parsed.medicamentos)){
 parsed.medicamentos.forEach(med=>{
-if(med['Nombre medicamento'] && med['Nombre medicamento'].trim()!==''){
-MEDS.push({
-medicamento: med['Nombre medicamento']||'',
-dosis: med['Dosis']||'',
-unidades: med['Unidades']||'',
-via: med['Vía de administración']||'',
-frecuencia: med['Frecuencia']||'',
-total_dosis: med['Total dosis a aplicar']||'',
-descripcion: med['Descripción']||''
-});
+if((med['Nombre medicamento']||'').trim()){
+MEDS.push({medicamento:med['Nombre medicamento']||'',dosis:med['Dosis']||'',unidades:med['Unidades']||'',via:med['Vía de administración']||'',frecuencia:med['Frecuencia']||'',total_dosis:med['Total dosis a aplicar']||'',descripcion:med['Descripción']||''});
 }
 });
-} else if(!isMedSlot){
+}else if(!isMedSlot){
 Object.keys(parsed).forEach(lbl=>{const v=(parsed[lbl]||'').toString().trim();if(v&&v!==lbl)res[lbl]=v;});
 }
 }catch(e){
-sb.className='sbar error';
-st.textContent=`Error imagen ${pos+1}: ${e.message}`;
-await new Promise(r=>setTimeout(r,2500));
-sb.className='sbar loading';
+sb.className='sbar error';st.textContent=`Error imagen ${pos+1}: ${e.message}`;
+await new Promise(r=>setTimeout(r,2500));sb.className='sbar loading';
 }
 }
-
 if(!isMedSlot){
 slot.fields.forEach(f=>{
 if(f.combined){const vals=f.combined.map(l=>res[l]||'').filter(v=>v.trim()!=='');ED[f.k]=vals.join(' / ');}
@@ -483,10 +467,8 @@ else ED[f.k]=res[f.l]||'';
 });
 }
 }
-
 if(fmt.extra)fmt.extra.forEach(f=>{ED[f.k]=f.auto?f.val:'';});
 sb.style.display='none';
-
 if(SF==='laboratorios'){document.getElementById('lab-prev-sec').style.display='block';updLabPrev();}
 renderFields();
 }
@@ -506,7 +488,6 @@ const fmt=FORMATS[SF],area=document.getElementById('farea');area.innerHTML='';
 const secs=[];
 fmt.slots.forEach(s=>{if(!s.isMed)secs.push({g:s.label,fields:s.fields});});
 if(fmt.extra)secs.push({g:'Datos adicionales',fields:fmt.extra});
-
 secs.forEach(sec=>{
 const g=document.createElement('div');g.className='gtitle';
 g.innerHTML=`<i class="ti ti-point-filled" style="font-size:13px;color:var(--blue)"></i>${sec.g}`;
@@ -527,21 +508,15 @@ if(el)el.addEventListener('input',()=>{ED[f.k]=el.value;if(SF==='laboratorios')u
 });
 });
 
-// Renderizar sección de medicamentos si aplica
 const hasMedSlot=fmt.slots.some(s=>s.isMed);
-if(hasMedSlot && MEDS.length>0){
+if(hasMedSlot&&MEDS.length>0){
 const mg=document.createElement('div');mg.className='gtitle';
 mg.innerHTML=`<i class="ti ti-point-filled" style="font-size:13px;color:var(--blue)"></i>Medicamentos (${MEDS.length} encontrado${MEDS.length>1?'s':''})`;
 area.appendChild(mg);
-
 MEDS.forEach((med,idx)=>{
 const block=document.createElement('div');block.className='med-block';
 block.innerHTML=`<div class="med-block-title"><i class="ti ti-pill" style="font-size:14px"></i>Medicamento ${idx+1}</div>`;
-const medFields=[
-{k:'medicamento',l:'Nombre medicamento'},{k:'dosis',l:'Dosis'},{k:'unidades',l:'Unidades'},
-{k:'via',l:'Vía de administración'},{k:'frecuencia',l:'Frecuencia'},
-{k:'total_dosis',l:'Total dosis a aplicar'},{k:'descripcion',l:'Descripción'}
-];
+const medFields=[{k:'medicamento',l:'Nombre medicamento'},{k:'dosis',l:'Dosis'},{k:'unidades',l:'Unidades'},{k:'via',l:'Vía de administración'},{k:'frecuencia',l:'Frecuencia'},{k:'total_dosis',l:'Total dosis a aplicar'},{k:'descripcion',l:'Descripción'}];
 medFields.forEach(f=>{
 const row=document.createElement('div');row.className='frow';
 const lc=document.createElement('div');lc.innerHTML=`<div class="flbl">${f.l}</div><div class="fbdg"><span class="badge ai"><i class="ti ti-sparkles" style="font-size:11px"></i>Extraído por IA</span></div>`;
@@ -558,13 +533,10 @@ area.appendChild(block);
 
 function dlExcel(){
 const fmt=FORMATS[SF];
-// Leer campos generales
 const allF=[];
 fmt.slots.forEach(s=>{if(!s.isMed)s.fields.forEach(f=>allF.push(f));});
 if(fmt.extra)fmt.extra.forEach(f=>allF.push(f));
 allF.forEach(f=>{const el=document.getElementById('ef-'+f.k);if(el)ED[f.k]=el.value||'';});
-
-// Leer medicamentos editados
 const hasMedSlot=fmt.slots.some(s=>s.isMed);
 if(hasMedSlot){
 MEDS.forEach((med,idx)=>{
@@ -573,81 +545,76 @@ const el=document.getElementById(`ef-med${idx}-${k}`);if(el)MEDS[idx][k]=el.valu
 });
 });
 }
-
 SF==='laboratorios'?dlLab():dlGen(fmt,allF);goSt(5);
 }
 
-// Estilo base para celdas Excel
-const cellStyle=(bold,bg,center,wrap)=>({
-font:{bold:!!bold,sz:11},
-fill:{fgColor:{rgb:bg||'FFFFFF'}},
-alignment:{horizontal:center?'center':'left',vertical:'center',wrapText:!!wrap},
+// Genera estilo de celda para xlsx
+function cs(bold,bgHex,center){
+return {
+font:{bold:!!bold,sz:11,color:{rgb:bold&&bgHex?'FFFFFF':'000000'}},
+fill:{patternType:'solid',fgColor:{rgb:bgHex||'FFFFFF'}},
+alignment:{horizontal:center?'center':'left',vertical:'center',wrapText:true},
 border:{top:{style:'thin',color:{rgb:'CCCCCC'}},bottom:{style:'thin',color:{rgb:'CCCCCC'}},left:{style:'thin',color:{rgb:'CCCCCC'}},right:{style:'thin',color:{rgb:'CCCCCC'}}}
-});
+};
+}
 
-function setCell(ws,r,c,v,bold,bg,center,wrap){
+function sc(ws,r,c,v,bold,bg,center){
 const ref=XLSX.utils.encode_cell({r,c});
-ws[ref]={v:v||'',t:'s',s:cellStyle(bold,bg,center,wrap)};
+ws[ref]={v:v!=null?v:'',t:'s',s:cs(bold,bg,center)};
 }
 
 function dlLab(){
 const wb=XLSX.utils.book_new(),ws={};
-setCell(ws,0,0,'PROGRAMACIÓN DE LABORATORIO',true,'185FA5',true);
-setCell(ws,0,1,'',false,'185FA5',true);setCell(ws,0,2,'',false,'185FA5',true);setCell(ws,0,3,'',false,'185FA5',true);
-setCell(ws,1,0,'Paciente:',true,'D9E8F8',false);setCell(ws,1,1,ED.paciente||'',false,null,true);
-setCell(ws,1,2,'Identificación:',true,'D9E8F8',false);setCell(ws,1,3,ED.identificacion||'',false,null,true);
-setCell(ws,2,0,'Dirección de atención:',true,'D9E8F8',false);setCell(ws,2,1,ED.direccion||'',false,null,true);
-setCell(ws,2,2,'Municipio:',true,'D9E8F8',false);setCell(ws,2,3,ED.municipio||'',false,null,true);
-setCell(ws,3,0,'Barrio:',true,'D9E8F8',false);setCell(ws,3,1,ED.barrio||'',false,null,true);
-setCell(ws,3,2,'Tel. paciente / Cel. 1 / Cel. 2:',true,'D9E8F8',false,true);setCell(ws,3,3,ED.telefonos||'',false,null,true);
-setCell(ws,4,0,'Persona que programa:',true,'D9E8F8',false);setCell(ws,4,1,ED.persona_programa||'',false,null,true);
-setCell(ws,4,2,'Fecha de programación:',true,'D9E8F8',false);setCell(ws,4,3,ED.fecha_prog||'',false,null,true);
+sc(ws,0,0,'PROGRAMACIÓN DE LABORATORIO',true,'185FA5',true);
+sc(ws,0,1,'',false,'185FA5',true);sc(ws,0,2,'',false,'185FA5',true);sc(ws,0,3,'',false,'185FA5',true);
+sc(ws,1,0,'Paciente:',true,'D9E8F8',false);sc(ws,1,1,ED.paciente||'',false,'FFFFFF',true);
+sc(ws,1,2,'Identificación:',true,'D9E8F8',false);sc(ws,1,3,ED.identificacion||'',false,'FFFFFF',true);
+sc(ws,2,0,'Dirección de atención:',true,'D9E8F8',false);sc(ws,2,1,ED.direccion||'',false,'FFFFFF',true);
+sc(ws,2,2,'Municipio:',true,'D9E8F8',false);sc(ws,2,3,ED.municipio||'',false,'FFFFFF',true);
+sc(ws,3,0,'Barrio:',true,'D9E8F8',false);sc(ws,3,1,ED.barrio||'',false,'FFFFFF',true);
+sc(ws,3,2,'Tel. / Cel. 1 / Cel. 2:',true,'D9E8F8',false);sc(ws,3,3,ED.telefonos||'',false,'FFFFFF',true);
+sc(ws,4,0,'Persona que programa:',true,'D9E8F8',false);sc(ws,4,1,ED.persona_programa||'',false,'FFFFFF',true);
+sc(ws,4,2,'Fecha de programación:',true,'D9E8F8',false);sc(ws,4,3,ED.fecha_prog||'',false,'FFFFFF',true);
 ws['!ref']='A1:D5';ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}}];
 ws['!cols']=[{wch:26},{wch:32},{wch:28},{wch:28}];ws['!rows']=[{hpt:26},{hpt:22},{hpt:22},{hpt:28},{hpt:22}];
-XLSX.utils.book_append_sheet(wb,ws,'Programación Laboratorio');XLSX.writeFile(wb,`laboratorios_${fd()}.xlsx`);
+XLSX.utils.book_append_sheet(wb,ws,'Programación Laboratorio');
+XLSX.writeFile(wb,`laboratorios_${fd()}.xlsx`);
 }
 
-function dlGen(fmt,allF){
+function dlGen(fmt,patientFields){
 const wb=XLSX.utils.book_new();
+const ws={};
 const hasMedSlot=fmt.slots.some(s=>s.isMed);
 
-// Hoja de datos del paciente
-const patientFields=allF.filter(f=>f.k!=='medicamento'&&f.k!=='dosis'&&f.k!=='unidades'&&f.k!=='via'&&f.k!=='frecuencia'&&f.k!=='total_dosis'&&f.k!=='descripcion');
-if(patientFields.length>0){
-const ws={};
-const headers=patientFields.map(f=>f.l);
-headers.forEach((h,c)=>{
-setCell(ws,0,c,h,true,'185FA5',true);
-});
-patientFields.forEach((f,c)=>{
-setCell(ws,1,c,ED[f.k]||'',false,null,true);
-});
-ws['!ref']=`A1:${XLSX.utils.encode_col(patientFields.length-1)}2`;
-ws['!cols']=headers.map(x=>({wch:Math.max(x.length+4,18)}));
-ws['!rows']=[{hpt:26},{hpt:20}];
-XLSX.utils.book_append_sheet(wb,ws,'Datos Paciente');
-}
+// Construir encabezados: campos paciente + campos medicamento
+const medFieldLabels=['Nombre medicamento','Dosis','Unidades','Vía de administración','Frecuencia','Total dosis a aplicar','Descripción'];
+const allHeaders=[...patientFields.map(f=>f.l),...(hasMedSlot?medFieldLabels:[])];
 
-// Hoja de medicamentos (una fila por medicamento)
-if(hasMedSlot && MEDS.length>0){
-const ws={};
-const medHeaders=['Paciente','Identificación','Nombre medicamento','Dosis','Unidades','Vía de administración','Frecuencia','Total dosis a aplicar','Descripción'];
-medHeaders.forEach((h,c)=>{
-setCell(ws,0,c,h,true,'185FA5',true);
+// Fila de encabezados — negrilla fondo azul texto blanco centrado
+allHeaders.forEach((h,c)=>{sc(ws,0,c,h,true,'185FA5',true);});
+
+if(hasMedSlot&&MEDS.length>0){
+// Una fila por medicamento, repitiendo datos del paciente
+MEDS.forEach((med,idx)=>{
+const row=idx+1;
+const bg=idx%2===0?'F7F9FC':'FFFFFF';
+// Datos del paciente
+patientFields.forEach((f,c)=>{sc(ws,row,c,ED[f.k]||'',false,bg,true);});
+// Datos del medicamento
+const medVals=[med.medicamento,med.dosis,med.unidades,med.via,med.frecuencia,med.total_dosis,med.descripcion];
+medVals.forEach((v,ci)=>{sc(ws,row,patientFields.length+ci,v,false,bg,true);});
 });
-MEDS.forEach((med,row)=>{
-const vals=[ED.paciente||'',ED.identificacion||'',med.medicamento,med.dosis,med.unidades,med.via,med.frecuencia,med.total_dosis,med.descripcion];
-vals.forEach((v,c)=>{
-setCell(ws,row+1,c,v,false,row%2===0?'F7F9FC':'FFFFFF',true);
-});
-});
-const lastRow=MEDS.length;
-ws['!ref']=`A1:I${lastRow+1}`;
-ws['!cols']=[{wch:28},{wch:16},{wch:40},{wch:10},{wch:12},{wch:22},{wch:14},{wch:18},{wch:30}];
+ws['!ref']=`A1:${XLSX.utils.encode_col(allHeaders.length-1)}${MEDS.length+1}`;
 ws['!rows']=[{hpt:26},...MEDS.map(()=>({hpt:20}))];
-XLSX.utils.book_append_sheet(wb,ws,'Medicamentos');
+}else{
+// Sin medicamentos: una sola fila de datos
+patientFields.forEach((f,c)=>{sc(ws,1,c,ED[f.k]||'',false,'FFFFFF',true);});
+ws['!ref']=`A1:${XLSX.utils.encode_col(allHeaders.length-1)}2`;
+ws['!rows']=[{hpt:26},{hpt:20}];
 }
 
+ws['!cols']=allHeaders.map(h=>({wch:Math.max(h.length+4,16)}));
+XLSX.utils.book_append_sheet(wb,ws,fmt.name.substring(0,31));
 XLSX.writeFile(wb,`${SF}_${fd()}.xlsx`);
 }
 
