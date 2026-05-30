@@ -533,8 +533,9 @@ REGLAS CRÍTICAS DE IDENTIFICACIÓN:
     medsDesc = `,
   "medicamentos": [
     {
-      "medicamento": "nombre completo del medicamento",
-      "dosis": "dosis y unidad",
+      "medicamento": "nombre completo del medicamento SIN el código de turno (ej: MORFINA 14 MG SC CADA 24 HORAS)",
+      "dosis": "dosis y unidad si aparece por separado, si ya está en medicamento deja vacío",
+      "turno": "código de turno que aparece junto al medicamento, puede ser T1, T2, T3 u otro código similar. Si no hay, deja vacío",
       "cantidad_be": "1 BE"
     }
   ]`;
@@ -558,7 +559,21 @@ REGLAS CRÍTICAS DE IDENTIFICACIÓN:
     fechaPrestacionNote = `\nIMPORTANTE: El campo "fecha_prestacion" debe extraerse del campo que diga "Fecha de la prestación:", "Fecha prestación:", "Fecha programada:", o similar. Este campo indica CUÁNDO debe programarse el laboratorio.`;
   }
 
-  return `${baseInstructions}${fechaPrestacionNote}
+  let controlNote = '';
+  if (isControl) {
+    controlNote = `
+
+INSTRUCCIONES ESTRICTAS PARA FÓRMULAS DE CONTROL:
+- Extrae ÚNICAMENTE: nombre_paciente, identificacion_paciente, afiliacion, y la lista de medicamentos.
+- NO extraigas ningún otro dato del documento aunque aparezca (dirección, teléfono, médico, EPS, diagnóstico, fechas, cuidador, etc.).
+- En el campo "medicamento" pon SOLO el nombre y dosis del medicamento, SIN incluir el código de turno (T1, T2, T3, etc.).
+- Si junto al medicamento aparece un código como T1, T2, T3 o similar, ponlo en el campo "turno" del mismo medicamento.
+- Si hay una tabla de medicamentos, cada fila es un elemento separado en el array.
+- El campo cantidad_be siempre es exactamente "1 BE".
+- IGNORA todo dato que no sea: nombre paciente, identificación paciente, afiliación, medicamento, dosis o turno.`;
+  }
+
+  return `${baseInstructions}${fechaPrestacionNote}${controlNote}
 
 Devuelve ÚNICAMENTE un objeto JSON con esta estructura exacta (sin texto adicional, sin backticks):
 {
@@ -633,10 +648,12 @@ function renderMedsRows(meds, isControl) {
     row.className = 'med-row';
     row.id = 'med_row_' + idx;
     if (isControl) {
+      const medDosisVal = [med.medicamento, med.dosis].filter(Boolean).join(' ');
+      const turnoVal = med.turno || '';
       row.innerHTML = `<button class="remove-btn" onclick="removeMed(${idx})">×</button>
-        <div class="med-row-fields" style="grid-template-columns:2fr 1fr 1fr">
-          <div class="field-item"><label>Medicamento</label><input type="text" class="ai-filled" id="med_medicamento_${idx}" value="${escHtml(med.medicamento||'')}" /></div>
-          <div class="field-item"><label>Dosis</label><input type="text" class="ai-filled" id="med_dosis_${idx}" value="${escHtml(med.dosis||'')}" /></div>
+        <div class="med-row-fields" style="grid-template-columns:3fr 1fr 1fr">
+          <div class="field-item"><label>Medicamento y Dosis <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_medicamento_dosis_${idx}" value="${escHtml(medDosisVal)}" /></div>
+          <div class="field-item"><label>Turno <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_turno_${idx}" value="${escHtml(turnoVal)}" placeholder="T1, T2, T3..." /></div>
           <div class="field-item"><label>Cantidad</label><input type="text" class="auto" id="med_cantidad_be_${idx}" value="1 BE" readonly /></div>
         </div>`;
     } else {
@@ -709,14 +726,22 @@ function collectFormData() {
   if (fmt.hasMeds) {
     const meds = [];
     currentMeds.forEach((_, idx) => {
+      if (fmt.isControl) {
+        if (!document.getElementById('med_medicamento_dosis_' + idx)) return;
+        meds.push({
+          medicamento_dosis: document.getElementById('med_medicamento_dosis_' + idx)?.value || '',
+          turno: document.getElementById('med_turno_' + idx)?.value || '',
+          cantidad_be: document.getElementById('med_cantidad_be_' + idx)?.value || '1 BE',
+        });
+        return;
+      }
       if (!document.getElementById('med_medicamento_' + idx)) return;
       const m = {
         medicamento: document.getElementById('med_medicamento_' + idx)?.value || '',
         dosis: document.getElementById('med_dosis_' + idx)?.value || '',
       };
-      if (fmt.isControl) {
-        m.cantidad_be = document.getElementById('med_cantidad_be_' + idx)?.value || '1 BE';
-      } else {
+      if (false) {
+        // placeholder
         m.frecuencia = document.getElementById('med_frecuencia_' + idx)?.value || '';
         m.duracion = document.getElementById('med_duracion_' + idx)?.value || '';
         m.cantidad = document.getElementById('med_cantidad_' + idx)?.value || '';
@@ -752,7 +777,7 @@ function renderPreview() {
 
   if (fmt.hasMeds && data.medicamentos && data.medicamentos.length > 0) {
     const headers = fmt.isControl
-      ? ['Nombre Paciente', 'Identificación', 'Afiliación', 'Medicamento', 'Dosis', 'Cantidad', 'Quien genera', 'Turno']
+      ? ['Nombre Paciente', 'Identificación', 'Afiliación', 'Medicamento y Dosis', 'Turno', 'Cantidad', 'Quien genera', 'Turno en que sale']
       : ['Nombre Paciente', 'Identificación', 'Afiliación', 'Medicamento', 'Dosis', 'Frecuencia', 'Duración', 'Cantidad', 'Vía', 'Quien genera'];
     const tr = document.createElement('tr');
     headers.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
@@ -760,7 +785,7 @@ function renderPreview() {
     data.medicamentos.forEach(med => {
       const row = document.createElement('tr');
       const vals = fmt.isControl
-        ? [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento, med.dosis, med.cantidad_be||'1 BE', data.quien_genera, data.turno]
+        ? [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento_dosis||'', med.turno||'', med.cantidad_be||'1 BE', data.quien_genera, data.turno||'']
         : [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento, med.dosis, med.frecuencia, med.duracion, med.cantidad, med.via, data.quien_genera];
       vals.forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
       table.appendChild(row);
@@ -811,13 +836,13 @@ function buildMedsSheet(data, fmt) {
   let headers, rows;
 
   if (isControl) {
-    headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento', 'Dosis', 'Cantidad', 'Quien genera', 'Turno en que sale'];
+    headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento y Dosis', 'Turno', 'Cantidad', 'Quien genera', 'Turno en que sale'];
     rows = data.medicamentos.map(med => [
       data.nombre_paciente || '',
       data.identificacion_paciente || '',
       data.afiliacion || '',
-      med.medicamento || '',
-      med.dosis || '',
+      med.medicamento_dosis || '',
+      med.turno || '',
       med.cantidad_be || '1 BE',
       data.quien_genera || '',
       data.turno || '',
