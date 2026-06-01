@@ -474,7 +474,23 @@ async function extractData() {
 
     setProgress(70, 'Procesando respuesta...');
     const data = await response.json();
-    const rawText = data.content.map(c => c.text || '').join('');
+    console.log('API response:', JSON.stringify(data).substring(0, 500));
+
+    // Handle errors from the API
+    if (data.error) {
+      throw new Error('API Error: ' + (data.error.message || JSON.stringify(data.error)));
+    }
+
+    // Extract text safely
+    let rawText = '';
+    if (data.content && Array.isArray(data.content)) {
+      rawText = data.content.map(c => c.text || '').join('');
+    } else if (typeof data === 'string') {
+      rawText = data;
+    } else {
+      console.error('Unexpected response format:', data);
+      rawText = '{}';
+    }
     const clean = rawText.replace(/```json|```/g, '').trim();
 
     let parsed;
