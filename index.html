@@ -459,7 +459,7 @@ async function extractData() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-haiku-4-5',
         max_tokens: 2000,
         system: systemPrompt,
         messages: [{
@@ -549,9 +549,12 @@ REGLAS CRÍTICAS DE IDENTIFICACIÓN:
     medsDesc = `,
   "medicamentos": [
     {
-      "medicamento": "nombre completo del medicamento SIN el código de turno (ej: MORFINA 14 MG SC CADA 24 HORAS)",
-      "dosis": "dosis y unidad si aparece por separado, si ya está en medicamento deja vacío",
-      "turno": "código de turno que aparece junto al medicamento, puede ser T1, T2, T3 u otro código similar. Si no hay, deja vacío",
+      "nombre_paciente": "nombre del paciente DE ESTA FILA de la tabla, NO del primer paciente",
+      "identificacion_paciente": "identificacion del paciente DE ESTA FILA de la tabla",
+      "afiliacion": "afiliacion del paciente DE ESTA FILA (POS, POLIZA, ARL, etc.)",
+      "medicamento": "nombre completo del medicamento SIN codigo de turno (ej: MORFINA 14 MG SC CADA 24 HORAS)",
+      "dosis": "dosis si aparece por separado, si ya esta en medicamento deja vacio",
+      "turno": "codigo T1, T2 o T3 que aparece junto al medicamento. Si no hay, deja vacio",
       "cantidad_be": "1 BE"
     }
   ]`;
@@ -580,13 +583,14 @@ REGLAS CRÍTICAS DE IDENTIFICACIÓN:
     controlNote = `
 
 INSTRUCCIONES ESTRICTAS PARA FÓRMULAS DE CONTROL:
-- Extrae ÚNICAMENTE: nombre_paciente, identificacion_paciente, afiliacion, y la lista de medicamentos.
-- NO extraigas ningún otro dato del documento aunque aparezca (dirección, teléfono, médico, EPS, diagnóstico, fechas, cuidador, etc.).
-- En el campo "medicamento" pon SOLO el nombre y dosis del medicamento, SIN incluir el código de turno (T1, T2, T3, etc.).
-- Si junto al medicamento aparece un código como T1, T2, T3 o similar, ponlo en el campo "turno" del mismo medicamento.
-- Si hay una tabla de medicamentos, cada fila es un elemento separado en el array.
+- El documento tiene una TABLA donde CADA FILA corresponde a un paciente diferente con su propio medicamento.
+- Debes extraer CADA FILA como un elemento separado en el array "medicamentos".
+- CADA elemento del array debe incluir el nombre_paciente, identificacion_paciente y afiliacion DE ESA FILA específica.
+- NUNCA repitas el nombre del primer paciente en las demás filas. Cada fila tiene su propio paciente.
+- En el campo "medicamento" pon SOLO el nombre y dosis, SIN el código de turno (T1, T2, T3, etc.).
+- Si aparece un código T1, T2, T3 junto al medicamento, ponlo en el campo "turno".
 - El campo cantidad_be siempre es exactamente "1 BE".
-- IGNORA todo dato que no sea: nombre paciente, identificación paciente, afiliación, medicamento, dosis o turno.`;
+- IGNORA todo dato que no sea: nombre paciente, identificación, afiliación, medicamento, dosis o turno.`;
   }
 
   return `${baseInstructions}${fechaPrestacionNote}${controlNote}
@@ -666,8 +670,16 @@ function renderMedsRows(meds, isControl) {
     if (isControl) {
       const medDosisVal = [med.medicamento, med.dosis].filter(Boolean).join(' ');
       const turnoVal = med.turno || '';
+      const nomVal = med.nombre_paciente || '';
+      const idVal = med.identificacion_paciente || '';
+      const afilVal = med.afiliacion || '';
       row.innerHTML = `<button class="remove-btn" onclick="removeMed(${idx})">×</button>
-        <div class="med-row-fields" style="grid-template-columns:3fr 1fr 1fr">
+        <div class="med-row-fields" style="grid-template-columns:2fr 1fr 1fr">
+          <div class="field-item"><label>Nombre Paciente <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_nombre_${idx}" value="${escHtml(nomVal)}" /></div>
+          <div class="field-item"><label>Identificación <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_idpac_${idx}" value="${escHtml(idVal)}" /></div>
+          <div class="field-item"><label>Afiliación <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_afil_${idx}" value="${escHtml(afilVal)}" /></div>
+        </div>
+        <div class="med-row-fields" style="grid-template-columns:3fr 1fr 1fr;margin-top:6px">
           <div class="field-item"><label>Medicamento y Dosis <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_medicamento_dosis_${idx}" value="${escHtml(medDosisVal)}" /></div>
           <div class="field-item"><label>Turno <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_turno_${idx}" value="${escHtml(turnoVal)}" placeholder="T1, T2, T3..." /></div>
           <div class="field-item"><label>Cantidad</label><input type="text" class="auto" id="med_cantidad_be_${idx}" value="1 BE" readonly /></div>
@@ -745,6 +757,9 @@ function collectFormData() {
       if (fmt.isControl) {
         if (!document.getElementById('med_medicamento_dosis_' + idx)) return;
         meds.push({
+          nombre_paciente: document.getElementById('med_nombre_' + idx)?.value || '',
+          identificacion_paciente: document.getElementById('med_idpac_' + idx)?.value || '',
+          afiliacion: document.getElementById('med_afil_' + idx)?.value || '',
           medicamento_dosis: document.getElementById('med_medicamento_dosis_' + idx)?.value || '',
           turno: document.getElementById('med_turno_' + idx)?.value || '',
           cantidad_be: document.getElementById('med_cantidad_be_' + idx)?.value || '1 BE',
@@ -801,7 +816,7 @@ function renderPreview() {
     data.medicamentos.forEach(med => {
       const row = document.createElement('tr');
       const vals = fmt.isControl
-        ? [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento_dosis||'', med.turno||'', med.cantidad_be||'1 BE', data.quien_genera, data.turno||'']
+        ? [med.nombre_paciente||data.nombre_paciente||'', med.identificacion_paciente||data.identificacion_paciente||'', med.afiliacion||data.afiliacion||'', med.medicamento_dosis||'', med.turno||'', med.cantidad_be||'1 BE', data.quien_genera, data.turno||'']
         : [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento, med.dosis, med.frecuencia, med.duracion, med.cantidad, med.via, data.quien_genera];
       vals.forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
       table.appendChild(row);
@@ -854,9 +869,9 @@ function buildMedsSheet(data, fmt) {
   if (isControl) {
     headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento y Dosis', 'Turno', 'Cantidad', 'Quien genera', 'Turno en que sale'];
     rows = data.medicamentos.map(med => [
-      data.nombre_paciente || '',
-      data.identificacion_paciente || '',
-      data.afiliacion || '',
+      med.nombre_paciente || data.nombre_paciente || '',
+      med.identificacion_paciente || data.identificacion_paciente || '',
+      med.afiliacion || data.afiliacion || '',
       med.medicamento_dosis || '',
       med.turno || '',
       med.cantidad_be || '1 BE',
