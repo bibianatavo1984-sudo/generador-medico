@@ -85,9 +85,6 @@
     .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 0.76rem; }
     .legend-item { display: flex; align-items: center; gap: 5px; }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .alert { padding: 10px 14px; border-radius: 8px; font-size: 0.83rem; margin-bottom: 14px; }
-    .alert-info { background: #ebf4ff; color: #1a56db; border-left: 3px solid #1a56db; }
-    .alert-warning { background: #fffbeb; color: #b7791f; border-left: 3px solid #f6ad55; }
     @media (max-width: 600px) {
       .med-row-fields { grid-template-columns: 1fr; }
       .lab-row-fields { grid-template-columns: 1fr; }
@@ -116,40 +113,28 @@
 
 <div class="container">
 
-  <!-- STEP 1: SELECT FORMAT -->
+  <!-- STEP 1 -->
   <div id="step1" class="card">
     <h2>Seleccionar formato</h2>
     <p class="subtitle">Elige el tipo de documento que necesitas generar</p>
     <div class="format-grid">
       <div class="format-card" onclick="selectFormat('formulas_domicilio')">
-        <div class="icon">🏠</div>
-        <div class="name">Fórmulas domicilio</div>
-        <div class="desc">Paciente + dirección + medicamentos</div>
+        <div class="icon">🏠</div><div class="name">Fórmulas domicilio</div><div class="desc">Paciente + dirección + medicamentos</div>
       </div>
       <div class="format-card" onclick="selectFormat('salud_casa')">
-        <div class="icon">💊</div>
-        <div class="name">Salud en casa</div>
-        <div class="desc">Paciente + medicamentos</div>
+        <div class="icon">💊</div><div class="name">Salud en casa</div><div class="desc">Paciente + medicamentos</div>
       </div>
       <div class="format-card" onclick="selectFormat('laboratorios')">
-        <div class="icon">🔬</div>
-        <div class="name">Laboratorios</div>
-        <div class="desc">Formato tabla programación</div>
+        <div class="icon">🔬</div><div class="name">Laboratorios</div><div class="desc">Formato tabla programación</div>
       </div>
       <div class="format-card" onclick="selectFormat('cambio_ips')">
-        <div class="icon">🔄</div>
-        <div class="name">Cambio de IPS</div>
-        <div class="desc">Paciente + IPS origen/destino</div>
+        <div class="icon">🔄</div><div class="name">Cambio de IPS</div><div class="desc">Paciente + IPS origen/destino</div>
       </div>
       <div class="format-card" onclick="selectFormat('solicitud_laboratorios')">
-        <div class="icon">🧪</div>
-        <div class="name">Solicitud laboratorios</div>
-        <div class="desc">Paciente + muestra + laboratorios</div>
+        <div class="icon">🧪</div><div class="name">Solicitud laboratorios</div><div class="desc">Paciente + muestra + laboratorios</div>
       </div>
       <div class="format-card" onclick="selectFormat('formulas_control')">
-        <div class="icon">📋</div>
-        <div class="name">Fórmulas de Control</div>
-        <div class="desc">Nombre + ID + Medicamento + Dosis</div>
+        <div class="icon">📋</div><div class="name">Fórmulas de Control</div><div class="desc">Por paciente: medicamento, dosis y turno</div>
       </div>
     </div>
     <div class="btn-row" style="justify-content:flex-end">
@@ -157,7 +142,7 @@
     </div>
   </div>
 
-  <!-- STEP 2: UPLOAD WORD -->
+  <!-- STEP 2 -->
   <div id="step2" class="card" style="display:none">
     <h2>Subir archivo Word con pantallazos</h2>
     <p class="subtitle">Pega todos los pantallazos en un documento .docx y súbelo aquí.</p>
@@ -175,10 +160,10 @@
     </div>
   </div>
 
-  <!-- STEP 3: ASSIGN IMAGES -->
+  <!-- STEP 3 -->
   <div id="step3" class="card" style="display:none">
     <h2>Asignar imágenes</h2>
-    <p class="subtitle">Asigna una o varias imágenes por sección. Puedes volver atrás en cualquier momento.</p>
+    <p class="subtitle">Asigna una o varias imágenes por sección.</p>
     <div id="assignSections"></div>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="goStep(2)">← Volver</button>
@@ -186,7 +171,7 @@
     </div>
   </div>
 
-  <!-- STEP 4: REVIEW DATA -->
+  <!-- STEP 4 -->
   <div id="step4" class="card" style="display:none">
     <h2>Revisar y completar datos</h2>
     <div class="legend">
@@ -209,7 +194,7 @@
     </div>
   </div>
 
-  <!-- STEP 5: DONE -->
+  <!-- STEP 5 -->
   <div id="step5" class="card" style="display:none">
     <div class="success-box">
       <div class="check">✅</div>
@@ -224,76 +209,73 @@
 </div>
 
 <script>
-// ==================== GLOBAL STATE ====================
 let selectedFormat = null;
-let extractedImages = []; // {name, dataUrl, base64}
-let assignedImages = {}; // section -> [imageIndex]
+let extractedImages = [];
+let assignedImages = {};
 let extractedData = {};
 let currentMeds = [];
 let currentLabs = [];
 
-// ==================== FORMAT CONFIG ====================
+// ===================== FORMATO CONFIG =====================
 const FORMATS = {
   formulas_domicilio: {
     name: 'Fórmulas domicilio',
     sections: ['Datos del paciente', 'Dirección y contacto', 'Medicamentos'],
     fields: [
-      { key: 'nombre_paciente', label: 'Nombre Paciente', type: 'ai', section: 'Datos del paciente' },
+      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
       { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion', label: 'Afiliación', type: 'ai', section: 'Datos del paciente' },
-      { key: 'fecha_nacimiento', label: 'Fecha Nacimiento', type: 'ai', section: 'Datos del paciente' },
-      { key: 'diagnostico', label: 'Diagnóstico', type: 'ai', section: 'Datos del paciente' },
-      { key: 'direccion', label: 'Dirección', type: 'ai', section: 'Dirección y contacto' },
-      { key: 'telefono', label: 'Teléfono', type: 'ai', section: 'Dirección y contacto' },
-      { key: 'barrio', label: 'Barrio', type: 'ai', section: 'Dirección y contacto' },
-      { key: 'ciudad', label: 'Ciudad', type: 'ai', section: 'Dirección y contacto' },
-      { key: 'quien_genera', label: 'Quien genera', type: 'manual', section: 'Dirección y contacto' },
+      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
+      { key: 'direccion',             label: 'Dirección',             type: 'ai',     section: 'Dirección y contacto' },
+      { key: 'telefono',              label: 'Teléfono',              type: 'ai',     section: 'Dirección y contacto' },
+      { key: 'barrio',                label: 'Barrio',                type: 'ai',     section: 'Dirección y contacto' },
+      { key: 'ciudad',                label: 'Ciudad',                type: 'ai',     section: 'Dirección y contacto' },
+      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'Dirección y contacto' },
     ],
     hasMeds: true,
+    medFields: ['medicamento','dosis','frecuencia','cantidad','via'],
   },
   salud_casa: {
     name: 'Salud en casa',
     sections: ['Datos del paciente', 'Medicamentos'],
     fields: [
-      { key: 'nombre_paciente', label: 'Nombre Paciente', type: 'ai', section: 'Datos del paciente' },
+      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
       { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion', label: 'Afiliación', type: 'ai', section: 'Datos del paciente' },
-      { key: 'fecha_nacimiento', label: 'Fecha Nacimiento', type: 'ai', section: 'Datos del paciente' },
-      { key: 'diagnostico', label: 'Diagnóstico', type: 'ai', section: 'Datos del paciente' },
-      { key: 'eps', label: 'EPS', type: 'ai', section: 'Datos del paciente' },
-      { key: 'medico', label: 'Médico tratante', type: 'ai', section: 'Datos del paciente' },
-      { key: 'quien_genera', label: 'Quien genera', type: 'manual', section: 'Datos del paciente' },
+      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
+      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'Datos del paciente' },
     ],
     hasMeds: true,
+    medFields: ['medicamento','dosis','frecuencia','cantidad','via'],
   },
   laboratorios: {
     name: 'Laboratorios',
     sections: ['Datos del paciente', 'Programación'],
     fields: [
-      { key: 'nombre_paciente', label: 'Nombre Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion', label: 'Afiliación', type: 'ai', section: 'Datos del paciente' },
-      { key: 'fecha_nacimiento', label: 'Fecha Nacimiento', type: 'ai', section: 'Datos del paciente' },
-      { key: 'diagnostico', label: 'Diagnóstico', type: 'ai', section: 'Datos del paciente' },
-      { key: 'fecha_prestacion', label: 'Fecha de Programación (Prestación)', type: 'ai', section: 'Programación' },
-      { key: 'ips_laboratorio', label: 'IPS Laboratorio', type: 'ai', section: 'Programación' },
-      { key: 'quien_genera', label: 'Quien genera', type: 'manual', section: 'Programación' },
+      { key: 'nombre_paciente',       label: 'Nombre paciente',       type: 'ai',     section: 'Datos del paciente' },
+      { key: 'identificacion_paciente', label: 'Documento Identidad', type: 'ai',     section: 'Datos del paciente' },
+      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
+      { key: 'direccion',             label: 'Dirección atención',    type: 'ai',     section: 'Datos del paciente' },
+      { key: 'barrio',                label: 'Barrio',                type: 'ai',     section: 'Datos del paciente' },
+      { key: 'municipio',             label: 'Municipio',             type: 'ai',     section: 'Datos del paciente' },
+      { key: 'telefono',              label: 'Teléfono / Celular',    type: 'ai',     section: 'Datos del paciente' },
+      { key: 'fecha_prestacion',      label: 'Fecha de programación', type: 'ai',     section: 'Programación' },
+      { key: 'quien_programa',        label: 'Quien programa',        type: 'manual', section: 'Programación' },
     ],
     hasMeds: false,
+    isLab: true,
   },
   cambio_ips: {
     name: 'Cambio de IPS',
     sections: ['Datos del paciente', 'IPS'],
     fields: [
-      { key: 'nombre_paciente', label: 'Nombre Paciente', type: 'ai', section: 'Datos del paciente' },
+      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
       { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion', label: 'Afiliación', type: 'ai', section: 'Datos del paciente' },
-      { key: 'fecha_nacimiento', label: 'Fecha Nacimiento', type: 'ai', section: 'Datos del paciente' },
-      { key: 'diagnostico', label: 'Diagnóstico', type: 'ai', section: 'Datos del paciente' },
-      { key: 'ips_origen', label: 'IPS Origen', type: 'ai', section: 'IPS' },
-      { key: 'ips_destino', label: 'IPS Destino', type: 'ai', section: 'IPS' },
-      { key: 'motivo_cambio', label: 'Motivo de cambio', type: 'ai', section: 'IPS' },
-      { key: 'quien_genera', label: 'Quien genera', type: 'manual', section: 'IPS' },
+      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
+      { key: 'ips_origen',            label: 'IPS Origen',            type: 'ai',     section: 'IPS' },
+      { key: 'codigo_ips_origen',     label: 'Código IPS Origen',     type: 'manual', section: 'IPS' },
+      { key: 'ips_destino',           label: 'IPS Destino',           type: 'ai',     section: 'IPS' },
+      { key: 'codigo_ips_destino',    label: 'Código IPS Destino',    type: 'manual', section: 'IPS' },
+      { key: 'medico_solicitante',    label: 'Médico solicitante',    type: 'ai',     section: 'IPS' },
+      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'IPS' },
     ],
     hasMeds: false,
   },
@@ -301,34 +283,27 @@ const FORMATS = {
     name: 'Solicitud laboratorios',
     sections: ['Datos del paciente', 'Laboratorios'],
     fields: [
-      { key: 'nombre_paciente', label: 'Nombre Paciente', type: 'ai', section: 'Datos del paciente' },
+      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
       { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion', label: 'Afiliación', type: 'ai', section: 'Datos del paciente' },
-      { key: 'fecha_nacimiento', label: 'Fecha Nacimiento', type: 'ai', section: 'Datos del paciente' },
-      { key: 'diagnostico', label: 'Diagnóstico', type: 'ai', section: 'Datos del paciente' },
-      { key: 'medico_solicitante', label: 'Médico solicitante', type: 'ai', section: 'Laboratorios' },
-      { key: 'muestra', label: 'Tipo de muestra', type: 'ai', section: 'Laboratorios' },
-      { key: 'quien_genera', label: 'Quien genera', type: 'manual', section: 'Laboratorios' },
+      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
+      { key: 'muestra',               label: 'Tipo de muestra',       type: 'ai',     section: 'Laboratorios' },
+      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'Laboratorios' },
     ],
     hasLabs: true,
     hasMeds: false,
   },
   formulas_control: {
     name: 'Fórmulas de Control',
-    sections: ['Datos del paciente', 'Medicamentos'],
+    sections: ['Medicamentos por paciente'],
     fields: [
-      { key: 'nombre_paciente', label: 'Nombre Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion', label: 'Afiliación', type: 'ai', section: 'Datos del paciente' },
-      { key: 'quien_genera', label: 'Quien genera', type: 'manual', section: 'Datos del paciente' },
-      { key: 'turno', label: 'Turno en que sale', type: 'manual', section: 'Datos del paciente' },
+      { key: 'quien_genera',  label: 'Quien genera',      type: 'manual', section: 'Medicamentos por paciente' },
     ],
     hasMeds: true,
     isControl: true,
   },
 };
 
-// ==================== NAVIGATION ====================
+// ===================== NAV =====================
 function goStep(n) {
   for (let i = 1; i <= 5; i++) {
     document.getElementById('step' + i).style.display = 'none';
@@ -338,7 +313,6 @@ function goStep(n) {
   window.scrollTo(0, 0);
 }
 
-// ==================== STEP 1: FORMAT SELECTION ====================
 function selectFormat(fmt) {
   selectedFormat = fmt;
   document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
@@ -346,12 +320,11 @@ function selectFormat(fmt) {
   document.getElementById('btn1next').disabled = false;
 }
 
-// ==================== STEP 2: FILE UPLOAD ====================
+// ===================== STEP 2: UPLOAD =====================
 const dropZone = document.getElementById('dropZone');
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
 dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragging'); if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); });
-
 function handleFile(event) { if (event.target.files[0]) processFile(event.target.files[0]); }
 
 function processFile(file) {
@@ -373,9 +346,7 @@ function processFile(file) {
       document.getElementById('imgCount').textContent = extractedImages.length;
       renderImagePreviews();
       document.getElementById('btn2next').disabled = extractedImages.length === 0;
-    } catch (err) {
-      alert('Error leyendo el archivo: ' + err.message);
-    }
+    } catch (err) { alert('Error leyendo el archivo: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -385,14 +356,12 @@ function renderImagePreviews() {
   list.innerHTML = '';
   extractedImages.forEach((img, i) => {
     const el = document.createElement('img');
-    el.src = img.dataUrl;
-    el.className = 'img-thumb';
-    el.title = img.name;
+    el.src = img.dataUrl; el.className = 'img-thumb'; el.title = img.name;
     list.appendChild(el);
   });
 }
 
-// ==================== STEP 3: ASSIGN ====================
+// ===================== STEP 3: ASSIGN =====================
 function renderAssignStep() {
   const fmt = FORMATS[selectedFormat];
   const container = document.getElementById('assignSections');
@@ -405,11 +374,7 @@ function renderAssignStep() {
     const grid = div.querySelector('.thumb-grid');
     extractedImages.forEach((img, i) => {
       const el = document.createElement('img');
-      el.src = img.dataUrl;
-      el.className = 'img-thumb';
-      el.dataset.idx = i;
-      el.dataset.sec = sec;
-      el.title = img.name;
+      el.src = img.dataUrl; el.className = 'img-thumb'; el.dataset.idx = i;
       const secKey = sec.replace(/\s/g,'_');
       if (assignedImages[secKey] && assignedImages[secKey].includes(i)) el.classList.add('selected');
       el.onclick = function() {
@@ -423,35 +388,25 @@ function renderAssignStep() {
   });
 }
 
-// ==================== STEP 4: EXTRACT & REVIEW ====================
+// ===================== STEP 4: EXTRACT =====================
 async function extractData() {
   const fmt = FORMATS[selectedFormat];
   document.getElementById('progressArea').style.display = 'block';
   document.getElementById('reviewFields').innerHTML = '';
   document.getElementById('previewArea').style.display = 'none';
-  extractedData = {};
-  currentMeds = [];
-  currentLabs = [];
+  extractedData = {}; currentMeds = []; currentLabs = [];
 
-  // Gather all assigned images
   let allImages = [];
-  Object.values(assignedImages).forEach(idxArr => {
-    idxArr.forEach(i => { if (!allImages.includes(i)) allImages.push(i); });
-  });
+  Object.values(assignedImages).forEach(idxArr => { idxArr.forEach(i => { if (!allImages.includes(i)) allImages.push(i); }); });
   if (allImages.length === 0) allImages = extractedImages.map((_, i) => i);
 
   setProgress(10, 'Preparando imágenes...');
-
   const imagePayloads = allImages.map(i => ({
     type: 'image',
     source: { type: 'base64', media_type: extractedImages[i].mime || 'image/png', data: extractedImages[i].base64 }
   }));
 
-  const isControl = fmt.isControl || false;
-  const hasLabs = fmt.hasLabs || false;
-
-  const systemPrompt = buildExtractionPrompt(fmt, isControl, hasLabs);
-
+  const systemPrompt = buildPrompt(fmt);
   setProgress(25, 'Enviando a IA...');
 
   try {
@@ -466,7 +421,7 @@ async function extractData() {
           role: 'user',
           content: [
             ...imagePayloads,
-            { type: 'text', text: 'Extrae todos los datos de estas imágenes médicas según las instrucciones del sistema. Responde ÚNICAMENTE con el JSON solicitado, sin texto adicional ni backticks.' }
+            { type: 'text', text: 'Extrae los datos de estas imágenes médicas. Responde ÚNICAMENTE con el JSON solicitado, sin texto adicional ni backticks.' }
           ]
         }]
       })
@@ -476,28 +431,16 @@ async function extractData() {
     const data = await response.json();
     console.log('API response:', JSON.stringify(data).substring(0, 500));
 
-    // Handle errors from the API
-    if (data.error) {
-      throw new Error('API Error: ' + (data.error.message || JSON.stringify(data.error)));
-    }
+    if (data.error) throw new Error('API Error: ' + (data.error.message || JSON.stringify(data.error)));
 
-    // Extract text safely
     let rawText = '';
     if (data.content && Array.isArray(data.content)) {
       rawText = data.content.map(c => c.text || '').join('');
-    } else if (typeof data === 'string') {
-      rawText = data;
-    } else {
-      console.error('Unexpected response format:', data);
-      rawText = '{}';
-    }
-    const clean = rawText.replace(/```json|```/g, '').trim();
+    } else { rawText = '{}'; }
 
+    const clean = rawText.replace(/```json|```/g, '').trim();
     let parsed;
-    try { parsed = JSON.parse(clean); } catch(e) {
-      console.error('Parse error:', clean);
-      parsed = {};
-    }
+    try { parsed = JSON.parse(clean); } catch(e) { console.error('Parse error:', clean); parsed = {}; }
 
     extractedData = parsed;
     currentMeds = parsed.medicamentos || [];
@@ -508,7 +451,6 @@ async function extractData() {
     setProgress(100, '¡Listo!');
     setTimeout(() => { document.getElementById('progressArea').style.display = 'none'; }, 600);
     renderPreview();
-
   } catch (err) {
     setProgress(100, 'Error: ' + err.message);
     console.error(err);
@@ -516,89 +458,143 @@ async function extractData() {
   }
 }
 
-function buildExtractionPrompt(fmt, isControl, hasLabs) {
-  const baseInstructions = `Eres un asistente especializado en extracción de datos de documentos médicos colombianos.
+function buildPrompt(fmt) {
+  const base = `Eres un asistente especializado en extracción de datos de documentos médicos colombianos.
 
-REGLAS CRÍTICAS DE IDENTIFICACIÓN:
-1. El campo "nombre_paciente" debe extraerse ÚNICAMENTE del campo que diga explícitamente "Paciente:" o "Nombre del paciente:" o "Nombre Paciente". NUNCA uses el nombre del cuidador, familiar o acompañante.
-2. El campo "identificacion_paciente" debe extraerse ÚNICAMENTE del campo que diga "Identificación Paciente:" o "No. Identificación Paciente:" o similar que incluya la palabra "Paciente". NUNCA uses identificación de cuidador o familiar.
-3. Si ves campos como "Nombre del cuidador:", "Cuidador:", "Representante:", "Responsable:", "Acompañante:", "Familiar:" - IGNÓRALOS completamente. No los uses para ningún campo.
-4. El campo "afiliacion" debe extraerse de donde diga "Afiliación:", "Tipo afiliación:", "Régimen:", y puede contener valores como: POS, PÓLIZA, ARL, SOAT, CONTRIBUTIVO, SUBSIDIADO, etc.
-5. Los formularios médicos colombianos tienen dos estilos: (a) campos flotantes con etiqueta pequeña arriba y valor dentro del recuadro, y (b) tablas con encabezado arriba y dato en celda de abajo. Lee ambos estilos correctamente.
-6. Si un campo no está visible o no existe en las imágenes, devuelve cadena vacía "".
-7. NUNCA inventes datos. Solo extrae lo que claramente se ve en la imagen.`;
+REGLAS CRÍTICAS:
+1. "nombre_paciente" → SOLO del campo "Paciente:" o "Nombre del paciente:" o "Nombre Paciente:". NUNCA del cuidador.
+2. "identificacion_paciente" → SOLO del campo "Identificación Paciente:" o "No. Identificación Paciente:". NUNCA del cuidador.
+3. "afiliacion" → del campo "Afiliación:", puede ser: POS, PÓLIZA, ARL, SOAT, CONTRIBUTIVO, SUBSIDIADO, etc.
+4. IGNORA COMPLETAMENTE campos como: "Nombre del cuidador", "Cuidador", "Representante", "Responsable", "Acompañante", "Familiar".
+5. Los formularios tienen campos flotantes (etiqueta arriba, valor abajo) y tablas (encabezado arriba, dato abajo). Lee ambos.
+6. Si un campo no está visible, devuelve cadena vacía "".
+7. NUNCA inventes datos.`;
 
-  let fieldsDesc = fmt.fields.filter(f => f.type === 'ai').map(f => `"${f.key}": "${f.label}"`).join(',\n  ');
+  if (fmt.isControl) {
+    return base + `
 
-  let medsDesc = '';
-  if (fmt.hasMeds && !isControl) {
-    medsDesc = `,
+FORMATO: FÓRMULAS DE CONTROL
+Este documento es una tabla donde CADA FILA es un paciente diferente con su propio medicamento.
+Debes retornar el array "medicamentos" con UNA entrada por cada fila de la tabla.
+CADA entrada debe tener los datos del paciente DE ESA FILA específica.
+El campo "medicamento_dosis_turno" debe contener el texto completo de la celda de medicamento incluyendo dosis, pero SIN el código T1/T2/T3.
+El código T1, T2 o T3 va en el campo "turno".
+NUNCA repitas el mismo paciente en todas las filas.
+
+Devuelve ÚNICAMENTE este JSON:
+{
   "medicamentos": [
     {
-      "medicamento": "nombre completo del medicamento",
-      "dosis": "dosis y unidad (ej: 500mg)",
-      "frecuencia": "frecuencia de administración",
-      "duracion": "duración del tratamiento",
-      "cantidad": "cantidad a dispensar",
-      "via": "vía de administración"
-    }
-  ]`;
-  }
-
-  if (isControl) {
-    medsDesc = `,
-  "medicamentos": [
-    {
-      "nombre_paciente": "nombre del paciente DE ESTA FILA de la tabla, NO del primer paciente",
-      "identificacion_paciente": "identificacion del paciente DE ESTA FILA de la tabla",
-      "afiliacion": "afiliacion del paciente DE ESTA FILA (POS, POLIZA, ARL, etc.)",
-      "medicamento": "nombre completo del medicamento SIN codigo de turno (ej: MORFINA 14 MG SC CADA 24 HORAS)",
-      "dosis": "dosis si aparece por separado, si ya esta en medicamento deja vacio",
-      "turno": "codigo T1, T2 o T3 que aparece junto al medicamento. Si no hay, deja vacio",
+      "nombre_paciente": "nombre del paciente de esta fila",
+      "identificacion_paciente": "identificacion del paciente de esta fila",
+      "afiliacion": "afiliacion del paciente de esta fila",
+      "medicamento_dosis_turno": "medicamento y dosis sin el codigo de turno",
+      "turno": "T1 o T2 o T3 si aparece, sino vacio",
       "cantidad_be": "1 BE"
     }
-  ]`;
+  ]
+}`;
   }
 
-  let labsDesc = '';
-  if (hasLabs) {
-    labsDesc = `,
+  if (fmt.isLab) {
+    return base + `
+
+FORMATO: PROGRAMACIÓN DE LABORATORIOS
+Extrae ÚNICAMENTE los campos del formato de programación de laboratorio:
+- nombre_paciente: nombre del paciente
+- identificacion_paciente: documento de identidad
+- afiliacion: tipo de afiliación
+- direccion: dirección de atención
+- barrio: barrio
+- municipio: municipio
+- telefono: teléfono o celular del paciente
+- fecha_prestacion: fecha de programación, puede aparecer como "Fecha de la prestación:" o "Fecha de programación:"
+
+Devuelve ÚNICAMENTE este JSON:
+{
+  "nombre_paciente": "",
+  "identificacion_paciente": "",
+  "afiliacion": "",
+  "direccion": "",
+  "barrio": "",
+  "municipio": "",
+  "telefono": "",
+  "fecha_prestacion": ""
+}`;
+  }
+
+  if (fmt.hasLabs) {
+    return base + `
+
+FORMATO: SOLICITUD DE LABORATORIOS
+Extrae ÚNICAMENTE:
+- nombre_paciente, identificacion_paciente, afiliacion, muestra (tipo de muestra)
+- laboratorios: array con CADA examen en una fila separada
+
+Devuelve ÚNICAMENTE este JSON:
+{
+  "nombre_paciente": "",
+  "identificacion_paciente": "",
+  "afiliacion": "",
+  "muestra": "",
   "laboratorios": [
     {
-      "nombre_laboratorio": "nombre completo del examen de laboratorio",
-      "descripcion": "descripción completa del examen tal como aparece en el documento",
-      "codigo": "código del examen si aparece",
-      "muestra": "tipo de muestra para este examen"
+      "nombre_laboratorio": "nombre completo del examen",
+      "descripcion": "descripcion completa del examen tal como aparece",
+      "codigo": "codigo si aparece"
     }
-  ]`;
-  }
-
-  let fechaPrestacionNote = '';
-  if (fmt.name === 'Laboratorios') {
-    fechaPrestacionNote = `\nIMPORTANTE: El campo "fecha_prestacion" debe extraerse del campo que diga "Fecha de la prestación:", "Fecha prestación:", "Fecha programada:", o similar. Este campo indica CUÁNDO debe programarse el laboratorio.`;
-  }
-
-  let controlNote = '';
-  if (isControl) {
-    controlNote = `
-
-INSTRUCCIONES ESTRICTAS PARA FÓRMULAS DE CONTROL:
-- El documento tiene una TABLA donde CADA FILA corresponde a un paciente diferente con su propio medicamento.
-- Debes extraer CADA FILA como un elemento separado en el array "medicamentos".
-- CADA elemento del array debe incluir el nombre_paciente, identificacion_paciente y afiliacion DE ESA FILA específica.
-- NUNCA repitas el nombre del primer paciente en las demás filas. Cada fila tiene su propio paciente.
-- En el campo "medicamento" pon SOLO el nombre y dosis, SIN el código de turno (T1, T2, T3, etc.).
-- Si aparece un código T1, T2, T3 junto al medicamento, ponlo en el campo "turno".
-- El campo cantidad_be siempre es exactamente "1 BE".
-- IGNORA todo dato que no sea: nombre paciente, identificación, afiliación, medicamento, dosis o turno.`;
-  }
-
-  return `${baseInstructions}${fechaPrestacionNote}${controlNote}
-
-Devuelve ÚNICAMENTE un objeto JSON con esta estructura exacta (sin texto adicional, sin backticks):
-{
-  ${fieldsDesc}${medsDesc}${labsDesc}
+  ]
 }`;
+  }
+
+  if (fmt.name === 'Cambio de IPS') {
+    return base + `
+
+FORMATO: CAMBIO DE IPS
+Extrae ÚNICAMENTE: nombre_paciente, identificacion_paciente, afiliacion, ips_origen, ips_destino, medico_solicitante.
+NO extraigas fecha de nacimiento, diagnóstico, EPS ni ningún otro campo.
+
+Devuelve ÚNICAMENTE este JSON:
+{
+  "nombre_paciente": "",
+  "identificacion_paciente": "",
+  "afiliacion": "",
+  "ips_origen": "",
+  "ips_destino": "",
+  "medico_solicitante": ""
+}`;
+  }
+
+  if (fmt.hasMeds) {
+    const isDom = fmt.name === 'Fórmulas domicilio';
+    const extraFields = isDom ? `"direccion": "", "telefono": "", "barrio": "", "ciudad": "",` : '';
+    return base + `
+
+FORMATO: ${fmt.name}
+Extrae ÚNICAMENTE: nombre_paciente, identificacion_paciente, afiliacion${isDom ? ', direccion, telefono, barrio, ciudad' : ''} y medicamentos.
+NO extraigas: fecha de nacimiento, diagnóstico, EPS, médico tratante, ni ningún otro campo.
+Para cada medicamento extrae: medicamento, dosis, frecuencia, cantidad, via.
+NO incluyas duración, NO incluyas campos extra.
+
+Devuelve ÚNICAMENTE este JSON:
+{
+  "nombre_paciente": "",
+  "identificacion_paciente": "",
+  "afiliacion": "",
+  ${extraFields}
+  "medicamentos": [
+    {
+      "medicamento": "nombre del medicamento",
+      "dosis": "dosis y unidad",
+      "frecuencia": "frecuencia de administracion",
+      "cantidad": "cantidad a dispensar",
+      "via": "via de administracion"
+    }
+  ]
+}`;
+  }
+
+  return base + `\n\nDevuelve ÚNICAMENTE un JSON con los campos disponibles en la imagen.`;
 }
 
 function setProgress(pct, msg) {
@@ -606,11 +602,12 @@ function setProgress(pct, msg) {
   document.getElementById('statusMsg').textContent = msg;
 }
 
+// ===================== RENDER REVIEW FORM =====================
 function renderReviewForm(fmt, data) {
   const container = document.getElementById('reviewFields');
   container.innerHTML = '';
 
-  // Group fields by section
+  // For formulas_control, fields are embedded per med row — show only quien_genera
   const sections = {};
   fmt.fields.forEach(f => {
     if (!sections[f.section]) sections[f.section] = [];
@@ -619,45 +616,38 @@ function renderReviewForm(fmt, data) {
 
   Object.entries(sections).forEach(([sec, fields]) => {
     const secDiv = document.createElement('div');
-    secDiv.className = 'section-assign';
-    secDiv.style.marginBottom = '16px';
+    secDiv.className = 'section-assign'; secDiv.style.marginBottom = '16px';
     secDiv.innerHTML = `<div class="sec-header">${sec}</div><div class="sec-body"><div class="fields-grid" id="fg_${sec.replace(/\s/g,'_')}"></div></div>`;
     container.appendChild(secDiv);
     const grid = secDiv.querySelector('.fields-grid');
-
     fields.forEach(f => {
       const val = data[f.key] || '';
-      const div = document.createElement('div');
-      div.className = 'field-item';
-      const badgeHtml = f.type === 'ai' ? '<span class="badge badge-ai">IA</span>' : f.type === 'manual' ? '<span class="badge badge-manual">Manual</span>' : '<span class="badge badge-auto">Auto</span>';
-      const inputClass = f.type === 'ai' && val ? 'ai-filled' : f.type === 'manual' ? 'manual' : f.type === 'auto' ? 'auto' : 'manual';
-      div.innerHTML = `<label>${f.label}${badgeHtml}</label><input type="text" class="${inputClass}" id="field_${f.key}" value="${escHtml(val)}" placeholder="${f.type === 'manual' ? 'Completar manualmente' : 'No extraído'}" />`;
+      const div = document.createElement('div'); div.className = 'field-item';
+      const badge = f.type === 'ai' ? '<span class="badge badge-ai">IA</span>' : '<span class="badge badge-manual">Manual</span>';
+      const cls = f.type === 'ai' && val ? 'ai-filled' : f.type === 'manual' ? 'manual' : 'manual';
+      div.innerHTML = `<label>${f.label}${badge}</label><input type="text" class="${cls}" id="field_${f.key}" value="${escHtml(val)}" placeholder="${f.type === 'manual' ? 'Completar manualmente' : 'No extraído'}" />`;
       grid.appendChild(div);
     });
   });
 
-  // Medicamentos section
   if (fmt.hasMeds) {
     const medsDiv = document.createElement('div');
-    medsDiv.className = 'section-assign';
-    medsDiv.style.marginBottom = '16px';
+    medsDiv.className = 'section-assign'; medsDiv.style.marginBottom = '16px';
     medsDiv.innerHTML = `<div class="sec-header">Medicamentos <span class="badge badge-ai">IA</span></div><div class="sec-body" id="medsContainer"></div>`;
     container.appendChild(medsDiv);
-    renderMedsRows(data.medicamentos || [], fmt.isControl);
+    renderMedsRows(data.medicamentos || [], fmt);
   }
 
-  // Laboratorios section
   if (fmt.hasLabs) {
     const labsDiv = document.createElement('div');
-    labsDiv.className = 'section-assign';
-    labsDiv.style.marginBottom = '16px';
+    labsDiv.className = 'section-assign'; labsDiv.style.marginBottom = '16px';
     labsDiv.innerHTML = `<div class="sec-header">Laboratorios <span class="badge badge-ai">IA</span></div><div class="sec-body" id="labsContainer"></div>`;
     container.appendChild(labsDiv);
     renderLabsRows(data.laboratorios || []);
   }
 }
 
-function renderMedsRows(meds, isControl) {
+function renderMedsRows(meds, fmt) {
   const container = document.getElementById('medsContainer');
   if (!container) return;
   container.innerHTML = '';
@@ -665,33 +655,32 @@ function renderMedsRows(meds, isControl) {
 
   currentMeds.forEach((med, idx) => {
     const row = document.createElement('div');
-    row.className = 'med-row';
-    row.id = 'med_row_' + idx;
-    if (isControl) {
-      const medDosisVal = [med.medicamento, med.dosis].filter(Boolean).join(' ');
+    row.className = 'med-row'; row.id = 'med_row_' + idx;
+
+    if (fmt.isControl) {
+      const mdVal = med.medicamento_dosis_turno || [med.medicamento, med.dosis].filter(Boolean).join(' ') || '';
       const turnoVal = med.turno || '';
       const nomVal = med.nombre_paciente || '';
       const idVal = med.identificacion_paciente || '';
       const afilVal = med.afiliacion || '';
       row.innerHTML = `<button class="remove-btn" onclick="removeMed(${idx})">×</button>
-        <div class="med-row-fields" style="grid-template-columns:2fr 1fr 1fr">
+        <div class="med-row-fields" style="grid-template-columns:2fr 1fr 1fr;margin-bottom:6px">
           <div class="field-item"><label>Nombre Paciente <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_nombre_${idx}" value="${escHtml(nomVal)}" /></div>
           <div class="field-item"><label>Identificación <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_idpac_${idx}" value="${escHtml(idVal)}" /></div>
           <div class="field-item"><label>Afiliación <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_afil_${idx}" value="${escHtml(afilVal)}" /></div>
         </div>
-        <div class="med-row-fields" style="grid-template-columns:3fr 1fr 1fr;margin-top:6px">
-          <div class="field-item"><label>Medicamento y Dosis <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_medicamento_dosis_${idx}" value="${escHtml(medDosisVal)}" /></div>
+        <div class="med-row-fields" style="grid-template-columns:3fr 1fr 1fr">
+          <div class="field-item"><label>Medicamento y Dosis <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_mddosis_${idx}" value="${escHtml(mdVal)}" /></div>
           <div class="field-item"><label>Turno <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_turno_${idx}" value="${escHtml(turnoVal)}" placeholder="T1, T2, T3..." /></div>
-          <div class="field-item"><label>Cantidad</label><input type="text" class="auto" id="med_cantidad_be_${idx}" value="1 BE" readonly /></div>
+          <div class="field-item"><label>Cantidad</label><input type="text" class="auto" id="med_cbe_${idx}" value="1 BE" readonly /></div>
         </div>`;
     } else {
       row.innerHTML = `<button class="remove-btn" onclick="removeMed(${idx})">×</button>
         <div class="med-row-fields">
-          <div class="field-item"><label>Medicamento</label><input type="text" class="ai-filled" id="med_medicamento_${idx}" value="${escHtml(med.medicamento||'')}" /></div>
-          <div class="field-item"><label>Dosis</label><input type="text" class="ai-filled" id="med_dosis_${idx}" value="${escHtml(med.dosis||'')}" /></div>
-          <div class="field-item"><label>Frecuencia</label><input type="text" class="ai-filled" id="med_frecuencia_${idx}" value="${escHtml(med.frecuencia||'')}" /></div>
-          <div class="field-item"><label>Duración</label><input type="text" class="ai-filled" id="med_duracion_${idx}" value="${escHtml(med.duracion||'')}" /></div>
-          <div class="field-item"><label>Cantidad</label><input type="text" class="ai-filled" id="med_cantidad_${idx}" value="${escHtml(med.cantidad||'')}" /></div>
+          <div class="field-item"><label>Medicamento</label><input type="text" class="ai-filled" id="med_med_${idx}" value="${escHtml(med.medicamento||'')}" /></div>
+          <div class="field-item"><label>Dosis</label><input type="text" class="ai-filled" id="med_dos_${idx}" value="${escHtml(med.dosis||'')}" /></div>
+          <div class="field-item"><label>Frecuencia</label><input type="text" class="ai-filled" id="med_frec_${idx}" value="${escHtml(med.frecuencia||'')}" /></div>
+          <div class="field-item"><label>Cantidad</label><input type="text" class="ai-filled" id="med_cant_${idx}" value="${escHtml(med.cantidad||'')}" /></div>
           <div class="field-item"><label>Vía</label><input type="text" class="ai-filled" id="med_via_${idx}" value="${escHtml(med.via||'')}" /></div>
         </div>`;
     }
@@ -699,86 +688,64 @@ function renderMedsRows(meds, isControl) {
   });
 
   const addBtn = document.createElement('button');
-  addBtn.className = 'add-btn';
-  addBtn.textContent = '+ Agregar medicamento';
-  addBtn.onclick = () => { currentMeds.push({}); renderMedsRows(currentMeds, isControl); };
+  addBtn.className = 'add-btn'; addBtn.textContent = '+ Agregar medicamento';
+  addBtn.onclick = () => { currentMeds.push({}); renderMedsRows(currentMeds, fmt); };
   container.appendChild(addBtn);
 }
 
-function removeMed(idx) {
-  const fmt = FORMATS[selectedFormat];
-  currentMeds.splice(idx, 1);
-  renderMedsRows(currentMeds, fmt.isControl);
-}
+function removeMed(idx) { currentMeds.splice(idx, 1); renderMedsRows(currentMeds, FORMATS[selectedFormat]); }
 
 function renderLabsRows(labs) {
   const container = document.getElementById('labsContainer');
   if (!container) return;
   container.innerHTML = '';
   currentLabs = labs.length > 0 ? [...labs] : [{}];
-
   currentLabs.forEach((lab, idx) => {
-    const row = document.createElement('div');
-    row.className = 'lab-row';
-    row.id = 'lab_row_' + idx;
+    const row = document.createElement('div'); row.className = 'lab-row'; row.id = 'lab_row_' + idx;
     row.innerHTML = `<button class="remove-btn" onclick="removeLab(${idx})">×</button>
       <div class="lab-row-fields">
-        <div class="field-item"><label>Laboratorio</label><input type="text" class="ai-filled" id="lab_nombre_${idx}" value="${escHtml(lab.nombre_laboratorio||lab.nombre||'')}" /></div>
+        <div class="field-item"><label>Laboratorio</label><input type="text" class="ai-filled" id="lab_nom_${idx}" value="${escHtml(lab.nombre_laboratorio||lab.nombre||'')}" /></div>
         <div class="field-item"><label>Descripción</label><input type="text" class="ai-filled" id="lab_desc_${idx}" value="${escHtml(lab.descripcion||'')}" /></div>
-        <div class="field-item"><label>Código</label><input type="text" class="ai-filled" id="lab_codigo_${idx}" value="${escHtml(lab.codigo||'')}" /></div>
-        <div class="field-item"><label>Muestra</label><input type="text" class="ai-filled" id="lab_muestra_${idx}" value="${escHtml(lab.muestra||'')}" /></div>
+        <div class="field-item"><label>Código</label><input type="text" class="ai-filled" id="lab_cod_${idx}" value="${escHtml(lab.codigo||'')}" /></div>
       </div>`;
     container.appendChild(row);
   });
-
   const addBtn = document.createElement('button');
-  addBtn.className = 'add-btn';
-  addBtn.textContent = '+ Agregar laboratorio';
+  addBtn.className = 'add-btn'; addBtn.textContent = '+ Agregar laboratorio';
   addBtn.onclick = () => { currentLabs.push({}); renderLabsRows(currentLabs); };
   container.appendChild(addBtn);
 }
 
-function removeLab(idx) {
-  currentLabs.splice(idx, 1);
-  renderLabsRows(currentLabs);
-}
+function removeLab(idx) { currentLabs.splice(idx, 1); renderLabsRows(currentLabs); }
 
 function collectFormData() {
   const fmt = FORMATS[selectedFormat];
   const result = {};
-  fmt.fields.forEach(f => {
-    const el = document.getElementById('field_' + f.key);
-    if (el) result[f.key] = el.value;
-  });
+  fmt.fields.forEach(f => { const el = document.getElementById('field_' + f.key); if (el) result[f.key] = el.value; });
 
   if (fmt.hasMeds) {
     const meds = [];
     currentMeds.forEach((_, idx) => {
       if (fmt.isControl) {
-        if (!document.getElementById('med_medicamento_dosis_' + idx)) return;
+        if (!document.getElementById('med_mddosis_' + idx)) return;
         meds.push({
           nombre_paciente: document.getElementById('med_nombre_' + idx)?.value || '',
           identificacion_paciente: document.getElementById('med_idpac_' + idx)?.value || '',
           afiliacion: document.getElementById('med_afil_' + idx)?.value || '',
-          medicamento_dosis: document.getElementById('med_medicamento_dosis_' + idx)?.value || '',
+          medicamento_dosis_turno: document.getElementById('med_mddosis_' + idx)?.value || '',
           turno: document.getElementById('med_turno_' + idx)?.value || '',
-          cantidad_be: document.getElementById('med_cantidad_be_' + idx)?.value || '1 BE',
+          cantidad_be: document.getElementById('med_cbe_' + idx)?.value || '1 BE',
         });
-        return;
+      } else {
+        if (!document.getElementById('med_med_' + idx)) return;
+        meds.push({
+          medicamento: document.getElementById('med_med_' + idx)?.value || '',
+          dosis: document.getElementById('med_dos_' + idx)?.value || '',
+          frecuencia: document.getElementById('med_frec_' + idx)?.value || '',
+          cantidad: document.getElementById('med_cant_' + idx)?.value || '',
+          via: document.getElementById('med_via_' + idx)?.value || '',
+        });
       }
-      if (!document.getElementById('med_medicamento_' + idx)) return;
-      const m = {
-        medicamento: document.getElementById('med_medicamento_' + idx)?.value || '',
-        dosis: document.getElementById('med_dosis_' + idx)?.value || '',
-      };
-      if (false) {
-        // placeholder
-        m.frecuencia = document.getElementById('med_frecuencia_' + idx)?.value || '';
-        m.duracion = document.getElementById('med_duracion_' + idx)?.value || '';
-        m.cantidad = document.getElementById('med_cantidad_' + idx)?.value || '';
-        m.via = document.getElementById('med_via_' + idx)?.value || '';
-      }
-      meds.push(m);
     });
     result.medicamentos = meds;
   }
@@ -786,12 +753,11 @@ function collectFormData() {
   if (fmt.hasLabs) {
     const labs = [];
     currentLabs.forEach((_, idx) => {
-      if (!document.getElementById('lab_nombre_' + idx)) return;
+      if (!document.getElementById('lab_nom_' + idx)) return;
       labs.push({
-        nombre_laboratorio: document.getElementById('lab_nombre_' + idx)?.value || '',
+        nombre_laboratorio: document.getElementById('lab_nom_' + idx)?.value || '',
         descripcion: document.getElementById('lab_desc_' + idx)?.value || '',
-        codigo: document.getElementById('lab_codigo_' + idx)?.value || '',
-        muestra: document.getElementById('lab_muestra_' + idx)?.value || '',
+        codigo: document.getElementById('lab_cod_' + idx)?.value || '',
       });
     });
     result.laboratorios = labs;
@@ -806,24 +772,30 @@ function renderPreview() {
   table.innerHTML = '';
   document.getElementById('previewArea').style.display = 'block';
 
-  if (fmt.hasMeds && data.medicamentos && data.medicamentos.length > 0) {
-    const headers = fmt.isControl
-      ? ['Nombre Paciente', 'Identificación', 'Afiliación', 'Medicamento y Dosis', 'Turno', 'Cantidad', 'Quien genera', 'Turno en que sale']
-      : ['Nombre Paciente', 'Identificación', 'Afiliación', 'Medicamento', 'Dosis', 'Frecuencia', 'Duración', 'Cantidad', 'Vía', 'Quien genera'];
+  if (fmt.isControl && data.medicamentos && data.medicamentos.length > 0) {
+    const hdrs = ['Nombre Paciente','Identificación','Afiliación','Medicamento y Dosis','Turno','Cantidad','Quien genera'];
     const tr = document.createElement('tr');
-    headers.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
+    hdrs.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
     table.appendChild(tr);
     data.medicamentos.forEach(med => {
       const row = document.createElement('tr');
-      const vals = fmt.isControl
-        ? [med.nombre_paciente||data.nombre_paciente||'', med.identificacion_paciente||data.identificacion_paciente||'', med.afiliacion||data.afiliacion||'', med.medicamento_dosis||'', med.turno||'', med.cantidad_be||'1 BE', data.quien_genera, data.turno||'']
-        : [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento, med.dosis, med.frecuencia, med.duracion, med.cantidad, med.via, data.quien_genera];
-      vals.forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
+      [med.nombre_paciente, med.identificacion_paciente, med.afiliacion, med.medicamento_dosis_turno, med.turno, med.cantidad_be, data.quien_genera].forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
+      table.appendChild(row);
+    });
+  } else if (fmt.hasMeds && data.medicamentos && data.medicamentos.length > 0) {
+    const hdrs = ['Nombre Paciente','Identificación','Afiliación','Medicamento','Dosis','Frecuencia','Cantidad','Vía','Quien genera'];
+    const tr = document.createElement('tr');
+    hdrs.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
+    table.appendChild(tr);
+    data.medicamentos.forEach(med => {
+      const row = document.createElement('tr');
+      [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento, med.dosis, med.frecuencia, med.cantidad, med.via, data.quien_genera].forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
       table.appendChild(row);
     });
   } else if (fmt.hasLabs && data.laboratorios && data.laboratorios.length > 0) {
+    const hdrs = ['Nombre Paciente','Identificación','Afiliación','Muestra','Laboratorio','Descripción','Código','Quien genera'];
     const tr = document.createElement('tr');
-    ['Nombre Paciente','Identificación','Afiliación','Muestra','Laboratorio','Descripción','Código','Quien genera'].forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
+    hdrs.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
     table.appendChild(tr);
     data.laboratorios.forEach(lab => {
       const row = document.createElement('tr');
@@ -831,8 +803,8 @@ function renderPreview() {
       table.appendChild(row);
     });
   } else {
+    const relevantFields = fmt.fields.slice(0, 8);
     const tr = document.createElement('tr');
-    const relevantFields = fmt.fields.slice(0, 6);
     relevantFields.forEach(f => { const th = document.createElement('th'); th.textContent = f.label; tr.appendChild(th); });
     table.appendChild(tr);
     const row = document.createElement('tr');
@@ -841,20 +813,18 @@ function renderPreview() {
   }
 }
 
-// ==================== STEP 5: GENERATE EXCEL ====================
+// ===================== GENERATE EXCEL =====================
 function generateExcel() {
   const data = collectFormData();
   const fmt = FORMATS[selectedFormat];
   const wb = XLSX.utils.book_new();
-
   let ws;
-  if (fmt.hasMeds && data.medicamentos && data.medicamentos.length > 0) {
-    ws = buildMedsSheet(data, fmt);
-  } else if (fmt.hasLabs && data.laboratorios && data.laboratorios.length > 0) {
-    ws = buildLabsSheet(data, fmt);
-  } else {
-    ws = buildGenericSheet(data, fmt);
-  }
+
+  if (fmt.isControl) ws = buildControlSheet(data, fmt);
+  else if (fmt.hasMeds && data.medicamentos && data.medicamentos.length > 0) ws = buildMedsSheet(data, fmt);
+  else if (fmt.hasLabs && data.laboratorios && data.laboratorios.length > 0) ws = buildLabsSheet(data, fmt);
+  else if (fmt.isLab) ws = buildLabProgramSheet(data, fmt);
+  else ws = buildGenericSheet(data, fmt);
 
   const sheetName = fmt.name.replace(/[:\\\/\?\*\[\]]/g, '').substring(0, 31);
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
@@ -862,98 +832,125 @@ function generateExcel() {
   goStep(5);
 }
 
-function buildMedsSheet(data, fmt) {
-  const isControl = fmt.isControl;
-  let headers, rows;
+function applyExcelStyle(ws, headers, rowCount, fmtName) {
+  // Title row
+  const titleRow = [fmtName];
+  XLSX.utils.sheet_add_aoa(ws, [[fmtName]], { origin: 'A1' });
 
-  if (isControl) {
-    headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento y Dosis', 'Turno', 'Cantidad', 'Quien genera', 'Turno en que sale'];
-    rows = data.medicamentos.map(med => [
-      med.nombre_paciente || data.nombre_paciente || '',
-      med.identificacion_paciente || data.identificacion_paciente || '',
-      med.afiliacion || data.afiliacion || '',
-      med.medicamento_dosis || '',
-      med.turno || '',
-      med.cantidad_be || '1 BE',
-      data.quien_genera || '',
-      data.turno || '',
-    ]);
-  } else {
-    const baseFields = fmt.fields.filter(f => !['nombre_paciente','identificacion_paciente','afiliacion','quien_genera'].includes(f.key) && f.type !== 'manual');
-    headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento', 'Dosis', 'Frecuencia', 'Duración', 'Cantidad', 'Vía', 'Quien genera'];
-    const extraKeys = baseFields.map(f => ({ key: f.key, label: f.label }));
-    extraKeys.forEach(e => { if (!headers.includes(e.label)) headers.push(e.label); });
+  // Merge title across all columns
+  if (!ws['!merges']) ws['!merges'] = [];
+  ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } });
 
-    rows = data.medicamentos.map(med => {
-      const base = [
-        data.nombre_paciente || '',
-        data.identificacion_paciente || '',
-        data.afiliacion || '',
-        med.medicamento || '',
-        med.dosis || '',
-        med.frecuencia || '',
-        med.duracion || '',
-        med.cantidad || '',
-        med.via || '',
-        data.quien_genera || '',
-      ];
-      extraKeys.forEach(e => base.push(data[e.key] || ''));
-      return base;
-    });
+  // Style title
+  const titleCell = ws['A1'];
+  titleCell.s = { font: { bold: true, sz: 14 }, alignment: { horizontal: 'center', vertical: 'center' }, fill: { fgColor: { rgb: '1A56DB' } } };
+
+  // Style header row (row 2, index 1)
+  for (let c = 0; c < headers.length; c++) {
+    const cellRef = XLSX.utils.encode_cell({ r: 1, c });
+    if (ws[cellRef]) {
+      ws[cellRef].s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1A56DB' } }, alignment: { horizontal: 'center' } };
+    }
   }
 
-  const wsData = [headers, ...rows];
+  // Column widths
+  ws['!cols'] = headers.map(() => ({ wch: 24 }));
+  // Row heights
+  if (!ws['!rows']) ws['!rows'] = [];
+  ws['!rows'][0] = { hpt: 28 };
+  ws['!rows'][1] = { hpt: 20 };
+}
+
+function buildControlSheet(data, fmt) {
+  const headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento y Dosis', 'Turno', 'Cantidad', 'Quien genera'];
+  const rows = (data.medicamentos || []).map(med => [
+    med.nombre_paciente || '',
+    med.identificacion_paciente || '',
+    med.afiliacion || '',
+    med.medicamento_dosis_turno || '',
+    med.turno || '',
+    med.cantidad_be || '1 BE',
+    data.quien_genera || '',
+  ]);
+  const wsData = [[fmt.name], headers, ...rows];
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  styleHeaderRow(ws, headers.length);
+  applyExcelStyle(ws, headers, rows.length, fmt.name);
+  return ws;
+}
+
+function buildMedsSheet(data, fmt) {
+  const headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento', 'Dosis', 'Frecuencia', 'Cantidad', 'Vía', 'Quien genera'];
+  const rows = (data.medicamentos || []).map(med => [
+    data.nombre_paciente || '',
+    data.identificacion_paciente || '',
+    data.afiliacion || '',
+    med.medicamento || '',
+    med.dosis || '',
+    med.frecuencia || '',
+    med.cantidad || '',
+    med.via || '',
+    data.quien_genera || '',
+  ]);
+  const wsData = [[fmt.name], headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  applyExcelStyle(ws, headers, rows.length, fmt.name);
   return ws;
 }
 
 function buildLabsSheet(data, fmt) {
-  const headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Médico solicitante', 'Tipo de muestra', 'Laboratorio', 'Descripción', 'Código', 'Quien genera'];
-  const rows = data.laboratorios.map(lab => [
+  const headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Tipo de muestra', 'Laboratorio', 'Descripción', 'Código', 'Quien genera'];
+  const rows = (data.laboratorios || []).map(lab => [
     data.nombre_paciente || '',
     data.identificacion_paciente || '',
     data.afiliacion || '',
-    data.medico_solicitante || '',
-    data.muestra || lab.muestra || '',
+    data.muestra || '',
     lab.nombre_laboratorio || '',
     lab.descripcion || '',
     lab.codigo || '',
     data.quien_genera || '',
   ]);
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  styleHeaderRow(ws, headers.length);
+  const wsData = [[fmt.name], headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  applyExcelStyle(ws, headers, rows.length, fmt.name);
+  return ws;
+}
+
+function buildLabProgramSheet(data, fmt) {
+  // Tabla programación laboratorios — formato específico
+  const headers = ['Nombre paciente', 'Documento Identidad', 'Afiliación', 'Dirección atención', 'Barrio', 'Municipio', 'Teléfono / Celular', 'Fecha de programación', 'Quien programa'];
+  const row = [
+    data.nombre_paciente || '',
+    data.identificacion_paciente || '',
+    data.afiliacion || '',
+    data.direccion || '',
+    data.barrio || '',
+    data.municipio || '',
+    data.telefono || '',
+    data.fecha_prestacion || '',
+    data.quien_programa || '',
+  ];
+  const wsData = [[fmt.name], headers, row];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  applyExcelStyle(ws, headers, 1, fmt.name);
   return ws;
 }
 
 function buildGenericSheet(data, fmt) {
   const headers = fmt.fields.map(f => f.label);
   const row = fmt.fields.map(f => data[f.key] || '');
-  const ws = XLSX.utils.aoa_to_sheet([headers, row]);
-  styleHeaderRow(ws, headers.length);
+  const wsData = [[fmt.name], headers, row];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  applyExcelStyle(ws, headers, 1, fmt.name);
   return ws;
 }
 
-function styleHeaderRow(ws, colCount) {
-  if (!ws['!cols']) ws['!cols'] = [];
-  for (let i = 0; i < colCount; i++) {
-    if (!ws['!cols'][i]) ws['!cols'][i] = {};
-    ws['!cols'][i].wch = 22;
-  }
-}
-
-// ==================== HELPERS ====================
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function resetAll() {
-  selectedFormat = null;
-  extractedImages = [];
-  assignedImages = {};
-  extractedData = {};
-  currentMeds = [];
-  currentLabs = [];
+  selectedFormat = null; extractedImages = []; assignedImages = {};
+  extractedData = {}; currentMeds = []; currentLabs = [];
   document.getElementById('imgPreviewList').innerHTML = '';
   document.getElementById('imgCount').textContent = '0';
   document.getElementById('btn1next').disabled = true;
@@ -962,12 +959,8 @@ function resetAll() {
   goStep(1);
 }
 
-// ==================== STEP INIT HOOKS ====================
 const _goStep = goStep;
-window.goStep = function(n) {
-  if (n === 3) renderAssignStep();
-  _goStep(n);
-};
+window.goStep = function(n) { if (n === 3) renderAssignStep(); _goStep(n); };
 </script>
 </body>
 </html>
