@@ -138,7 +138,7 @@
       </div>
     </div>
     <div class="btn-row" style="justify-content:flex-end">
-      <button class="btn btn-primary" id="btn1next" onclick="if(selectedFormat) goStep(2);" style="background:#a0aec0;cursor:not-allowed;opacity:0.7;">Siguiente →</button>
+      <button class="btn btn-secondary" id="btn1next" onclick="goStep(2)">Siguiente →</button>
     </div>
   </div>
 
@@ -319,11 +319,9 @@ function selectFormat(fmt) {
   const card = document.querySelector('[data-fmt="' + fmt + '"]');
   if (card) card.classList.add('selected');
   const btn = document.getElementById('btn1next');
-  btn.removeAttribute('disabled');
-  btn.style.background = '#1a56db';
-  btn.style.color = '#ffffff';
-  btn.style.cursor = 'pointer';
-  btn.style.opacity = '1';
+  btn.classList.remove('btn-secondary');
+  btn.classList.add('btn-primary');
+  btn.onclick = function() { goStep(2); };
 }
 
 // ===================== STEP 2: UPLOAD =====================
