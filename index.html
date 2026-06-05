@@ -859,132 +859,142 @@ function generateExcel() {
 }
 
 function downloadStyledExcel(title, headers, rows) {
-  // Build HTML table with inline styles — Excel opens HTML tables natively
-  const blue = '#1A56DB';
-  const white = '#FFFFFF';
-  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
-    xmlns:x="urn:schemas-microsoft-com:office:excel"
-    xmlns="http://www.w3.org/TR/REC-html40">
-  <head><meta charset="UTF-8">
-  <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>
-  <x:ExcelWorksheet><x:Name>${escHtml(title)}</x:Name>
-  <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-  </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-  </head><body>
-  <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-family:Calibri,Arial;font-size:11pt;">
-    <tr>
-      <td colspan="${headers.length}" style="background:${blue};color:${white};font-weight:bold;font-size:14pt;text-align:center;vertical-align:middle;padding:8px;">
-        ${escHtml(title)}
-      </td>
-    </tr>
-    <tr>
-      ${headers.map(h => `<td style="background:${blue};color:${white};font-weight:bold;text-align:center;vertical-align:middle;padding:6px;border:1px solid #000;">${escHtml(h)}</td>`).join('')}
-    </tr>`;
+  // SpreadsheetML XML — true .xlsx compatible, no Excel warning
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+<Styles>
+  <Style ss:ID="title">
+    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+    <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="14"/>
+    <Interior ss:Color="#1A56DB" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="header">
+    <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+    <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
+    <Interior ss:Color="#1A56DB" ss:Pattern="Solid"/>
+    <Borders>
+      <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+      <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+      <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+      <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+    </Borders>
+  </Style>
+  <Style ss:ID="data">
+    <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+    <Borders>
+      <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
+      <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
+      <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
+      <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
+    </Borders>
+  </Style>
+  <Style ss:ID="lbl">
+    <Alignment ss:Horizontal="Right" ss:Vertical="Center" ss:WrapText="1"/>
+    <Font ss:Bold="1" ss:Color="#1B3A6B"/>
+    <Interior ss:Color="#D6E4FF" ss:Pattern="Solid"/>
+    <Borders>
+      <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+      <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+      <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+      <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+    </Borders>
+  </Style>
+</Styles>
+<Worksheet ss:Name="${escXml(title).substring(0,31)}">
+<Table>`;
 
+  // Title row — merged across all cols
+  xml += `<Row ss:Height="28"><Cell ss:MergeAcross="${headers.length-1}" ss:StyleID="title"><Data ss:Type="String">${escXml(title)}</Data></Cell></Row>`;
+
+  // Header row
+  xml += '<Row ss:Height="20">';
+  headers.forEach(h => { xml += `<Cell ss:StyleID="header"><Data ss:Type="String">${escXml(h)}</Data></Cell>`; });
+  xml += '</Row>';
+
+  // Data rows
   rows.forEach(row => {
-    html += '<tr>' + row.map(v =>
-      `<td style="text-align:left;vertical-align:middle;padding:5px;border:1px solid #AAAAAA;">${escHtml(String(v||''))}</td>`
-    ).join('') + '</tr>';
+    xml += '<Row ss:Height="18">';
+    row.forEach(v => { xml += `<Cell ss:StyleID="data"><Data ss:Type="String">${escXml(String(v||''))}</Data></Cell>`; });
+    xml += '</Row>';
   });
 
-  html += '</table></body></html>';
+  xml += '</Table></Worksheet></Workbook>';
 
-  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.xls';
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  triggerDownload(blob, title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.xls');
 }
 
 function downloadLabProgramExcel(data, fmt) {
-  const blue = '#1A56DB'; const white = '#FFFFFF'; const lblbg = '#D6E4FF'; const lblclr = '#1B3A6B';
-  const lbl = (text) => `<td style="background:${lblbg};color:${lblclr};font-weight:bold;text-align:right;vertical-align:middle;padding:5px;border:1px solid #888;width:180px;">${escHtml(text)}</td>`;
-  const val = (text) => `<td style="text-align:left;vertical-align:middle;padding:5px;border:1px solid #888;width:220px;">${escHtml(text||'')}</td>`;
+  function row2(l1, v1, l2, v2) {
+    return `<Row ss:Height="20">
+      <Cell ss:StyleID="lbl"><Data ss:Type="String">${escXml(l1)}</Data></Cell>
+      <Cell ss:StyleID="data"><Data ss:Type="String">${escXml(v1||'')}</Data></Cell>
+      <Cell ss:StyleID="lbl"><Data ss:Type="String">${escXml(l2)}</Data></Cell>
+      <Cell ss:StyleID="data"><Data ss:Type="String">${escXml(v2||'')}</Data></Cell>
+    </Row>`;
+  }
 
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
-    xmlns:x="urn:schemas-microsoft-com:office:excel"
-    xmlns="http://www.w3.org/TR/REC-html40">
-  <head><meta charset="UTF-8">
-  <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>
-  <x:ExcelWorksheet><x:Name>Programación laboratorio</x:Name>
-  <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-  </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-  </head><body>
-  <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-family:Calibri,Arial;font-size:11pt;">
-    <tr>
-      <td colspan="4" style="background:${blue};color:${white};font-weight:bold;font-size:14pt;text-align:center;padding:8px;">
-        Programación de laboratorio
-      </td>
-    </tr>
-    <tr>
-      ${lbl('Nombre paciente:')}
-      ${val(data.nombre_paciente)}
-      ${lbl('Teléfono / Celular 1 / Celular 2:')}
-      ${val(data.telefono)}
-    </tr>
-    <tr>
-      ${lbl('Documento Identidad:')}
-      ${val(data.identificacion_paciente)}
-      ${lbl('Afiliación:')}
-      ${val(data.afiliacion)}
-    </tr>
-    <tr>
-      ${lbl('Dirección atención:')}
-      ${val(data.direccion)}
-      ${lbl('Fecha de programación:')}
-      ${val(data.fecha_prestacion)}
-    </tr>
-    <tr>
-      ${lbl('Barrio:')}
-      ${val(data.barrio)}
-      ${lbl('Quien programa:')}
-      ${val(data.quien_programa)}
-    </tr>
-    <tr>
-      ${lbl('Municipio:')}
-      ${val(data.municipio)}
-      <td colspan="2"></td>
-    </tr>
-  </table></body></html>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+<Styles>
+  <Style ss:ID="title"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+    <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="13"/>
+    <Interior ss:Color="#1A56DB" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="lbl"><Alignment ss:Horizontal="Right" ss:Vertical="Center" ss:WrapText="1"/>
+    <Font ss:Bold="1" ss:Color="#1B3A6B"/>
+    <Interior ss:Color="#D6E4FF" ss:Pattern="Solid"/>
+    <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="data"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/>
+    <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/></Borders></Style>
+</Styles>
+<Worksheet ss:Name="Programacion laboratorio">
+<Table ss:DefaultColumnWidth="120">
+  <Row ss:Height="26"><Cell ss:MergeAcross="3" ss:StyleID="title"><Data ss:Type="String">Programación de laboratorio</Data></Cell></Row>
+  ${row2('Nombre paciente:', data.nombre_paciente, 'Teléfono / Celular 1 / Celular 2:', data.telefono)}
+  ${row2('Documento Identidad:', data.identificacion_paciente, 'Afiliación:', data.afiliacion)}
+  ${row2('Dirección atención:', data.direccion, 'Fecha de programación:', data.fecha_prestacion)}
+  ${row2('Barrio:', data.barrio, 'Quien programa:', data.quien_programa)}
+  <Row ss:Height="18">
+    <Cell ss:StyleID="lbl"><Data ss:Type="String">Municipio:</Data></Cell>
+    <Cell ss:StyleID="data"><Data ss:Type="String">${escXml(data.municipio||'')}</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+  </Row>
+</Table></Worksheet></Workbook>`;
 
-  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  triggerDownload(blob, 'Programacion_Laboratorio_' + new Date().toISOString().slice(0,10) + '.xls');
+  goStep(5);
+}
+
+function triggerDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'Programacion_Laboratorio_' + new Date().toISOString().slice(0,10) + '.xls';
+  a.download = filename;
   a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-  goStep(5);
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function escXml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
 
-function resetAll() {
-  selectedFormat = null; extractedImages = []; assignedImages = {};
-  extractedData = {}; currentMeds = []; currentLabs = [];
-  document.getElementById('imgPreviewList').innerHTML = '';
-  document.getElementById('imgCount').textContent = '0';
-  document.getElementById('btn1next').disabled = true;
-  document.getElementById('btn2next').disabled = true;
-  document.getElementById('fileInput').value = '';
-  document.getElementById('reviewFields').innerHTML = '';
-  document.getElementById('previewArea').style.display = 'none';
-  document.getElementById('progressArea').style.display = 'none';
-  document.getElementById('assignSections').innerHTML = '';
-  document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
-  goStep(1);
-}
-
-const _goStep = goStep;
-window.goStep = function(n) { if (n === 3) renderAssignStep(); _goStep(n); };
-</script>
-</body>
-</html>
