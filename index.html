@@ -118,22 +118,22 @@
     <h2>Seleccionar formato</h2>
     <p class="subtitle">Elige el tipo de documento que necesitas generar</p>
     <div class="format-grid">
-      <div class="format-card" onclick="selectFormat('formulas_domicilio')">
+      <div class="format-card" onclick="selectFormat('formulas_domicilio', this)">
         <div class="icon">🏠</div><div class="name">Fórmulas domicilio</div><div class="desc">Paciente + dirección + medicamentos</div>
       </div>
-      <div class="format-card" onclick="selectFormat('salud_casa')">
+      <div class="format-card" onclick="selectFormat('salud_casa', this)">
         <div class="icon">💊</div><div class="name">Salud en casa</div><div class="desc">Paciente + medicamentos</div>
       </div>
-      <div class="format-card" onclick="selectFormat('laboratorios')">
+      <div class="format-card" onclick="selectFormat('laboratorios', this)">
         <div class="icon">🔬</div><div class="name">Laboratorios</div><div class="desc">Formato tabla programación</div>
       </div>
-      <div class="format-card" onclick="selectFormat('cambio_ips')">
+      <div class="format-card" onclick="selectFormat('cambio_ips', this)">
         <div class="icon">🔄</div><div class="name">Cambio de IPS</div><div class="desc">Paciente + IPS origen/destino</div>
       </div>
-      <div class="format-card" onclick="selectFormat('solicitud_laboratorios')">
+      <div class="format-card" onclick="selectFormat('solicitud_laboratorios', this)">
         <div class="icon">🧪</div><div class="name">Solicitud laboratorios</div><div class="desc">Paciente + muestra + laboratorios</div>
       </div>
-      <div class="format-card" onclick="selectFormat('formulas_control')">
+      <div class="format-card" onclick="selectFormat('formulas_control', this)">
         <div class="icon">📋</div><div class="name">Fórmulas de Control</div><div class="desc">Por paciente: medicamento, dosis y turno</div>
       </div>
     </div>
@@ -313,10 +313,10 @@ function goStep(n) {
   window.scrollTo(0, 0);
 }
 
-function selectFormat(fmt) {
+function selectFormat(fmt, el) {
   selectedFormat = fmt;
   document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
+  if (el) el.classList.add('selected');
   document.getElementById('btn1next').disabled = false;
 }
 
