@@ -414,7 +414,7 @@ async function extractData() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
         system: systemPrompt,
         messages: [{
@@ -816,16 +816,41 @@ function generateExcel() {
   try {
     const data = collectFormData();
     const fmt = FORMATS[selectedFormat];
-    let wb;
 
-    if (fmt.isControl) wb = buildControlSheet(data, fmt);
-    else if (fmt.hasMeds && data.medicamentos && data.medicamentos.length > 0) wb = buildMedsSheet(data, fmt);
-    else if (fmt.hasLabs && data.laboratorios && data.laboratorios.length > 0) wb = buildLabsSheet(data, fmt);
-    else if (fmt.isLab) wb = buildLabProgramSheet(data, fmt);
-    else wb = buildGenericSheet(data, fmt);
+    let headers, rows, title;
 
-    const filename = fmt.name.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
-    XLSX.writeFile(wb, filename);
+    if (fmt.isControl) {
+      title = fmt.name;
+      headers = ['Nombre Paciente','Identificación Paciente','Afiliación','Medicamento y Dosis','Turno','Cantidad','Quien genera'];
+      rows = (data.medicamentos||[]).map(m => [
+        m.nombre_paciente||'', m.identificacion_paciente||'', m.afiliacion||'',
+        m.medicamento_dosis_turno||'', m.turno||'', m.cantidad_be||'1 BE', data.quien_genera||''
+      ]);
+    } else if (fmt.hasMeds) {
+      title = fmt.name;
+      headers = ['Nombre Paciente','Identificación Paciente','Afiliación','Medicamento','Dosis','Frecuencia','Cantidad','Vía','Quien genera'];
+      rows = (data.medicamentos||[]).map(m => [
+        data.nombre_paciente||'', data.identificacion_paciente||'', data.afiliacion||'',
+        m.medicamento||'', m.dosis||'', m.frecuencia||'', m.cantidad||'', m.via||'', data.quien_genera||''
+      ]);
+    } else if (fmt.hasLabs) {
+      title = fmt.name;
+      headers = ['Nombre Paciente','Identificación Paciente','Afiliación','Tipo de muestra','Laboratorio','Descripción','Quien genera'];
+      rows = (data.laboratorios||[]).map(l => [
+        data.nombre_paciente||'', data.identificacion_paciente||'', data.afiliacion||'',
+        data.muestra||'', l.nombre_laboratorio||'', l.descripcion||'', data.quien_genera||''
+      ]);
+    } else if (fmt.isLab) {
+      // Programación laboratorio — tabla especial
+      downloadLabProgramExcel(data, fmt);
+      return;
+    } else {
+      title = fmt.name;
+      headers = fmt.fields.map(f => f.label);
+      rows = [fmt.fields.map(f => data[f.key]||'')];
+    }
+
+    downloadStyledExcel(title, headers, rows);
     goStep(5);
   } catch(err) {
     alert('Error generando Excel: ' + err.message);
@@ -833,166 +858,109 @@ function generateExcel() {
   }
 }
 
-// ---- Style helpers ----
-function makeCell(v, bold, bg, color) {
-  return {
-    v: v || '',
-    t: 's',
-    s: {
-      font: { bold: !!bold, color: { rgb: color || '000000' }, sz: bold ? 12 : 11 },
-      fill: bg ? { patternType: 'solid', fgColor: { rgb: bg } } : undefined,
-      alignment: { horizontal: bold ? 'center' : 'left', vertical: 'center', wrapText: true },
-      border: {
-        top: { style: 'thin', color: { rgb: 'AAAAAA' } },
-        bottom: { style: 'thin', color: { rgb: 'AAAAAA' } },
-        left: { style: 'thin', color: { rgb: 'AAAAAA' } },
-        right: { style: 'thin', color: { rgb: 'AAAAAA' } },
-      }
-    }
-  };
+function downloadStyledExcel(title, headers, rows) {
+  // Build HTML table with inline styles — Excel opens HTML tables natively
+  const blue = '#1A56DB';
+  const white = '#FFFFFF';
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns="http://www.w3.org/TR/REC-html40">
+  <head><meta charset="UTF-8">
+  <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>
+  <x:ExcelWorksheet><x:Name>${escHtml(title)}</x:Name>
+  <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+  </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+  </head><body>
+  <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-family:Calibri,Arial;font-size:11pt;">
+    <tr>
+      <td colspan="${headers.length}" style="background:${blue};color:${white};font-weight:bold;font-size:14pt;text-align:center;vertical-align:middle;padding:8px;">
+        ${escHtml(title)}
+      </td>
+    </tr>
+    <tr>
+      ${headers.map(h => `<td style="background:${blue};color:${white};font-weight:bold;text-align:center;vertical-align:middle;padding:6px;border:1px solid #000;">${escHtml(h)}</td>`).join('')}
+    </tr>`;
+
+  rows.forEach(row => {
+    html += '<tr>' + row.map(v =>
+      `<td style="text-align:left;vertical-align:middle;padding:5px;border:1px solid #AAAAAA;">${escHtml(String(v||''))}</td>`
+    ).join('') + '</tr>';
+  });
+
+  html += '</table></body></html>';
+
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.xls';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
 }
 
-function makeWB(sheetName, ws, colCount) {
-  // Use XLSX.write with cellStyles option
-  const wb = XLSX.utils.book_new();
-  // Set col widths
-  ws['!cols'] = Array(colCount).fill({ wch: 24 });
-  XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
-  return wb;
-}
+function downloadLabProgramExcel(data, fmt) {
+  const blue = '#1A56DB'; const white = '#FFFFFF'; const lblbg = '#D6E4FF'; const lblclr = '#1B3A6B';
+  const lbl = (text) => `<td style="background:${lblbg};color:${lblclr};font-weight:bold;text-align:right;vertical-align:middle;padding:5px;border:1px solid #888;width:180px;">${escHtml(text)}</td>`;
+  const val = (text) => `<td style="text-align:left;vertical-align:middle;padding:5px;border:1px solid #888;width:220px;">${escHtml(text||'')}</td>`;
 
-function buildWS(title, headers, dataRows) {
-  const aoa = [];
-  // Row 1: title
-  const titleRow = [title];
-  for (let i = 1; i < headers.length; i++) titleRow.push('');
-  aoa.push(titleRow);
-  // Row 2: headers
-  aoa.push(headers);
-  // Data rows
-  dataRows.forEach(r => aoa.push(r));
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns="http://www.w3.org/TR/REC-html40">
+  <head><meta charset="UTF-8">
+  <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>
+  <x:ExcelWorksheet><x:Name>Programación laboratorio</x:Name>
+  <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+  </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+  </head><body>
+  <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-family:Calibri,Arial;font-size:11pt;">
+    <tr>
+      <td colspan="4" style="background:${blue};color:${white};font-weight:bold;font-size:14pt;text-align:center;padding:8px;">
+        Programación de laboratorio
+      </td>
+    </tr>
+    <tr>
+      ${lbl('Nombre paciente:')}
+      ${val(data.nombre_paciente)}
+      ${lbl('Teléfono / Celular 1 / Celular 2:')}
+      ${val(data.telefono)}
+    </tr>
+    <tr>
+      ${lbl('Documento Identidad:')}
+      ${val(data.identificacion_paciente)}
+      ${lbl('Afiliación:')}
+      ${val(data.afiliacion)}
+    </tr>
+    <tr>
+      ${lbl('Dirección atención:')}
+      ${val(data.direccion)}
+      ${lbl('Fecha de programación:')}
+      ${val(data.fecha_prestacion)}
+    </tr>
+    <tr>
+      ${lbl('Barrio:')}
+      ${val(data.barrio)}
+      ${lbl('Quien programa:')}
+      ${val(data.quien_programa)}
+    </tr>
+    <tr>
+      ${lbl('Municipio:')}
+      ${val(data.municipio)}
+      <td colspan="2"></td>
+    </tr>
+  </table></body></html>`;
 
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  // Merge title row across all columns
-  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
-
-  // Style title cell
-  const titleRef = XLSX.utils.encode_cell({ r: 0, c: 0 });
-  ws[titleRef].s = {
-    font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' } },
-    fill: { patternType: 'solid', fgColor: { rgb: '1A56DB' } },
-    alignment: { horizontal: 'center', vertical: 'center' },
-  };
-
-  // Style header row
-  for (let c = 0; c < headers.length; c++) {
-    const ref = XLSX.utils.encode_cell({ r: 1, c });
-    if (!ws[ref]) ws[ref] = { v: headers[c], t: 's' };
-    ws[ref].s = {
-      font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } },
-      fill: { patternType: 'solid', fgColor: { rgb: '1A56DB' } },
-      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-      border: {
-        top: { style: 'thin', color: { rgb: '000000' } },
-        bottom: { style: 'thin', color: { rgb: '000000' } },
-        left: { style: 'thin', color: { rgb: '000000' } },
-        right: { style: 'thin', color: { rgb: '000000' } },
-      }
-    };
-  }
-
-  // Row heights
-  ws['!rows'] = [{ hpt: 28 }, { hpt: 20 }];
-
-  return ws;
-}
-
-function buildControlSheet(data, fmt) {
-  const headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento y Dosis', 'Turno', 'Cantidad', 'Quien genera'];
-  const rows = (data.medicamentos || []).map(med => [
-    med.nombre_paciente||'', med.identificacion_paciente||'', med.afiliacion||'',
-    med.medicamento_dosis_turno||'', med.turno||'', med.cantidad_be||'1 BE', data.quien_genera||'',
-  ]);
-  const ws = buildWS(fmt.name, headers, rows);
-  return makeWB(fmt.name, ws, headers.length);
-}
-
-function buildMedsSheet(data, fmt) {
-  const headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Medicamento', 'Dosis', 'Frecuencia', 'Cantidad', 'Vía', 'Quien genera'];
-  const rows = (data.medicamentos || []).map(med => [
-    data.nombre_paciente||'', data.identificacion_paciente||'', data.afiliacion||'',
-    med.medicamento||'', med.dosis||'', med.frecuencia||'', med.cantidad||'', med.via||'', data.quien_genera||'',
-  ]);
-  const ws = buildWS(fmt.name, headers, rows);
-  return makeWB(fmt.name, ws, headers.length);
-}
-
-function buildLabsSheet(data, fmt) {
-  const headers = ['Nombre Paciente', 'Identificación Paciente', 'Afiliación', 'Tipo de muestra', 'Laboratorio', 'Descripción', 'Quien genera'];
-  const rows = (data.laboratorios || []).map(lab => [
-    data.nombre_paciente||'', data.identificacion_paciente||'', data.afiliacion||'',
-    data.muestra||'', lab.nombre_laboratorio||'', lab.descripcion||'', data.quien_genera||'',
-  ]);
-  const ws = buildWS(fmt.name, headers, rows);
-  return makeWB(fmt.name, ws, headers.length);
-}
-
-function buildLabProgramSheet(data, fmt) {
-  const headers = ['Campo', 'Valor', 'Campo 2', 'Valor 2'];
-  const rows = [
-    ['Nombre paciente', data.nombre_paciente||'', 'Teléfono / Celular 1 / Celular 2', data.telefono||''],
-    ['Documento Identidad', data.identificacion_paciente||'', 'Afiliación', data.afiliacion||''],
-    ['Dirección atención', data.direccion||'', 'Fecha de programación', data.fecha_prestacion||''],
-    ['Barrio', data.barrio||'', 'Quien programa', data.quien_programa||''],
-    ['Municipio', data.municipio||'', '', ''],
-  ];
-
-  const aoa = [['Programación de laboratorio', '', '', ''], ...rows];
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
-  ws['!cols'] = [{ wch: 26 }, { wch: 30 }, { wch: 26 }, { wch: 30 }];
-  ws['!rows'] = [{ hpt: 26 }];
-
-  // Style title
-  const t = ws['A1'] || { v: 'Programación de laboratorio', t: 's' };
-  ws['A1'] = t;
-  ws['A1'].s = {
-    font: { bold: true, sz: 13, color: { rgb: 'FFFFFF' } },
-    fill: { patternType: 'solid', fgColor: { rgb: '1A56DB' } },
-    alignment: { horizontal: 'center', vertical: 'center' },
-  };
-
-  // Style label cells (cols A and C)
-  const lblStyle = {
-    font: { bold: true, color: { rgb: '1B3A6B' } },
-    fill: { patternType: 'solid', fgColor: { rgb: 'D6E4FF' } },
-    alignment: { horizontal: 'right', vertical: 'center', wrapText: true },
-    border: { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} }
-  };
-  const valStyle = {
-    font: { sz: 11 },
-    alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
-    border: { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} }
-  };
-
-  for (let r = 1; r < 1 + rows.length; r++) {
-    ['A','B','C','D'].forEach((col, ci) => {
-      const ref = col + (r + 1);
-      if (!ws[ref]) ws[ref] = { v: '', t: 's' };
-      ws[ref].s = (ci === 0 || ci === 2) ? lblStyle : valStyle;
-    });
-  }
-
-  return makeWB('Programación laboratorio', ws, 4);
-}
-
-function buildGenericSheet(data, fmt) {
-  const headers = fmt.fields.map(f => f.label);
-  const rows = [fmt.fields.map(f => data[f.key]||'')];
-  const ws = buildWS(fmt.name, headers, rows);
-  return makeWB(fmt.name, ws, headers.length);
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Programacion_Laboratorio_' + new Date().toISOString().slice(0,10) + '.xls';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  goStep(5);
 }
 
 function escHtml(str) {
