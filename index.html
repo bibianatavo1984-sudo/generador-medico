@@ -117,28 +117,9 @@
   <div id="step1" class="card">
     <h2>Seleccionar formato</h2>
     <p class="subtitle">Elige el tipo de documento que necesitas generar</p>
-    <div class="format-grid">
-      <div class="format-card" data-fmt="formulas_domicilio" onclick="selectFormat('formulas_domicilio')">
-        <div class="icon">🏠</div><div class="name">Fórmulas domicilio</div><div class="desc">Paciente + dirección + medicamentos</div>
-      </div>
-      <div class="format-card" data-fmt="salud_casa" onclick="selectFormat('salud_casa')">
-        <div class="icon">💊</div><div class="name">Salud en casa</div><div class="desc">Paciente + medicamentos</div>
-      </div>
-      <div class="format-card" data-fmt="laboratorios" onclick="selectFormat('laboratorios')">
-        <div class="icon">🔬</div><div class="name">Laboratorios</div><div class="desc">Formato tabla programación</div>
-      </div>
-      <div class="format-card" data-fmt="cambio_ips" onclick="selectFormat('cambio_ips')">
-        <div class="icon">🔄</div><div class="name">Cambio de IPS</div><div class="desc">Paciente + IPS origen/destino</div>
-      </div>
-      <div class="format-card" data-fmt="solicitud_laboratorios" onclick="selectFormat('solicitud_laboratorios')">
-        <div class="icon">🧪</div><div class="name">Solicitud laboratorios</div><div class="desc">Paciente + muestra + laboratorios</div>
-      </div>
-      <div class="format-card" data-fmt="formulas_control" onclick="selectFormat('formulas_control')">
-        <div class="icon">📋</div><div class="name">Fórmulas de Control</div><div class="desc">Por paciente: medicamento, dosis y turno</div>
-      </div>
-    </div>
+    <div class="format-grid" id="formatGrid"></div>
     <div class="btn-row" style="justify-content:flex-end">
-      <button class="btn btn-secondary" id="btn1next" onclick="goStep(2)">Siguiente →</button>
+      <button class="btn btn-primary" id="btn1next" style="background:#a0aec0;cursor:default;" onclick="btnNextClick()">Siguiente →</button>
     </div>
   </div>
 
@@ -1001,4 +982,18 @@ function triggerDownload(blob, filename) {
 function escXml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
+
+// Override goStep to hook renderAssignStep
+(function() {
+  var orig = goStep;
+  window.goStep = function(n) {
+    if (n === 3) renderAssignStep();
+    orig(n);
+  };
+  document.addEventListener('DOMContentLoaded', function() {
+    renderFormatCards();
+  });
+  // Also render immediately in case DOM already loaded
+  if (document.readyState !== 'loading') renderFormatCards();
+})();
 
