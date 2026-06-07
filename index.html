@@ -1,1025 +1,1475 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Generador de Formatos Médicos</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #2d3748; min-height: 100vh; }
-    header { background: linear-gradient(135deg, #1a56db, #0f3460); color: white; padding: 18px 24px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-    header h1 { font-size: 1.3rem; font-weight: 700; }
-    header span { font-size: 1.6rem; }
-    .stepper { display: flex; justify-content: center; gap: 0; background: white; padding: 0; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
-    .step { display: flex; align-items: center; padding: 12px 18px; font-size: 0.78rem; font-weight: 600; color: #a0aec0; cursor: default; white-space: nowrap; }
-    .step.active { color: #1a56db; border-bottom: 3px solid #1a56db; }
-    .step.done { color: #38a169; }
-    .step span.num { background: #e2e8f0; color: #718096; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; font-size: 0.72rem; font-weight: 700; }
-    .step.active span.num { background: #1a56db; color: white; }
-    .step.done span.num { background: #38a169; color: white; }
-    .arrow { color: #cbd5e0; padding: 0 4px; line-height: 48px; }
-    .container { max-width: 860px; margin: 30px auto; padding: 0 16px; }
-    .card { background: white; border-radius: 14px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); padding: 30px; }
-    h2 { font-size: 1.15rem; font-weight: 700; color: #1a365d; margin-bottom: 8px; }
-    .subtitle { color: #718096; font-size: 0.88rem; margin-bottom: 22px; }
-    .format-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-    .format-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 18px 14px; cursor: pointer; text-align: center; background: white; }
-    .format-card:hover { border-color: #90b8f8; background: #f0f6ff; }
-    .format-card.selected { border-color: #1a56db !important; background: #dbeafe !important; box-shadow: 0 0 0 4px rgba(26,86,219,0.25) !important; }
-    .format-card.selected .name { color: #1a56db !important; }
-    .format-card .icon { font-size: 2rem; margin-bottom: 8px; }
-    .format-card .name { font-weight: 700; font-size: 0.9rem; color: #2d3748; margin-bottom: 4px; }
-    .format-card .desc { font-size: 0.75rem; color: #718096; }
-    .format-card .icon, .format-card .name, .format-card .desc { pointer-events: none; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; transition: all 0.15s; }
-    .btn-primary { background: #1a56db; color: white; }
-    .btn-primary:hover { background: #1546b8; }
-    .btn-primary:disabled { background: #a0aec0; cursor: not-allowed; }
-    .btn-secondary { background: #e2e8f0; color: #4a5568; }
-    .btn-secondary:hover { background: #cbd5e0; }
-    .btn-success { background: #38a169; color: white; }
-    .btn-success:hover { background: #2f855a; }
-    .btn-row { display: flex; gap: 12px; margin-top: 22px; justify-content: space-between; align-items: center; }
-    .drop-zone { border: 2px dashed #cbd5e0; border-radius: 10px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #f7fafc; margin-bottom: 16px; }
-    .drop-zone:hover, .drop-zone.dragging { border-color: #1a56db; background: #ebf4ff; }
-    .drop-zone .icon { font-size: 2.5rem; margin-bottom: 10px; }
-    .drop-zone p { color: #718096; font-size: 0.88rem; }
-    .drop-zone p strong { color: #1a56db; }
-    #fileInput { display: none; }
-    .img-list { margin-top: 14px; }
-    .img-thumb { display: inline-block; width: 100px; height: 80px; object-fit: cover; border-radius: 6px; border: 2px solid #e2e8f0; margin: 4px; cursor: pointer; transition: border 0.15s; }
-    .img-thumb.selected { border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.2); }
-    .section-assign { margin-bottom: 18px; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
-    .section-assign .sec-header { background: #f7fafc; padding: 10px 16px; font-weight: 700; font-size: 0.88rem; color: #2d3748; border-bottom: 1px solid #e2e8f0; }
-    .section-assign .sec-body { padding: 12px 16px; }
-    .section-assign .sec-body p { font-size: 0.78rem; color: #718096; margin-bottom: 8px; }
-    .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; margin-left: 6px; }
-    .badge-ai { background: #ebf4ff; color: #1a56db; }
-    .badge-manual { background: #fef3c7; color: #d97706; }
-    .badge-auto { background: #dcfce7; color: #16a34a; }
-    .fields-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 4px; }
-    .field-item { display: flex; flex-direction: column; gap: 4px; }
-    .field-item label { font-size: 0.78rem; font-weight: 600; color: #4a5568; display: flex; align-items: center; gap: 6px; }
-    .field-item input, .field-item select, .field-item textarea { border: 1.5px solid #e2e8f0; border-radius: 7px; padding: 7px 10px; font-size: 0.88rem; color: #2d3748; background: white; transition: border 0.15s; width: 100%; }
-    .field-item input:focus, .field-item select:focus, .field-item textarea:focus { outline: none; border-color: #1a56db; }
-    .field-item input.manual { border-color: #f6ad55; background: #fffbf0; }
-    .field-item input.ai-filled { border-color: #68d391; background: #f0fff4; }
-    .field-item input.auto { border-color: #90cdf4; background: #f0f8ff; }
-    .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; margin-bottom: 16px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #1a56db, #38b2ac); border-radius: 3px; transition: width 0.5s; }
-    .status-msg { text-align: center; padding: 12px; font-size: 0.88rem; color: #4a5568; }
-    .preview-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 14px; overflow-x: auto; display: block; }
-    .preview-table th { background: #1a56db; color: white; padding: 8px 10px; text-align: left; font-size: 0.75rem; white-space: nowrap; }
-    .preview-table td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-    .preview-table tr:hover td { background: #f7fafc; }
-    .success-box { text-align: center; padding: 30px; }
-    .success-box .check { font-size: 3.5rem; margin-bottom: 12px; }
-    .success-box h3 { font-size: 1.2rem; color: #2d3748; margin-bottom: 6px; }
-    .success-box p { color: #718096; font-size: 0.88rem; }
-    .med-row, .lab-row { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; position: relative; }
-    .med-row-fields { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
-    .lab-row-fields { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
-    .remove-btn { position: absolute; top: 8px; right: 8px; background: #fed7d7; color: #c53030; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
-    .add-btn { margin-top: 8px; background: #ebf4ff; color: #1a56db; border: 1.5px dashed #1a56db; border-radius: 7px; padding: 6px 14px; font-size: 0.82rem; cursor: pointer; font-weight: 600; }
-    .add-btn:hover { background: #dbeafe; }
-    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 0.76rem; }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-    @media (max-width: 600px) {
-      .med-row-fields { grid-template-columns: 1fr; }
-      .lab-row-fields { grid-template-columns: 1fr; }
-      .fields-grid { grid-template-columns: 1fr; }
-      .format-grid { grid-template-columns: 1fr 1fr; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BE y PUSH 2026 — Farmacia Hospitalaria</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
+// ══ PARTICLES ══
+(function(){
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const COLORS = ['#2b4fff','#a855f7','#ff2d78','#00c4cc','#10f075'];
+  
+  function rand(a,b){ return Math.random()*(b-a)+a; }
+  
+  class Particle {
+    constructor(){
+      this.reset();
     }
-  </style>
+    reset(){
+      this.x = rand(0, W); this.y = rand(0, H);
+      this.r = rand(1.5, 4);
+      this.vx = rand(-.4,.4); this.vy = rand(-.5,-.1);
+      this.alpha = rand(.2,.7);
+      this.color = COLORS[Math.floor(rand(0,COLORS.length))];
+      this.life = 0; this.maxLife = rand(120,280);
+    }
+    update(){
+      this.x += this.vx; this.y += this.vy;
+      this.life++;
+      if(this.life > this.maxLife || this.y < -10) this.reset();
+    }
+    draw(){
+      const fade = Math.min(this.life/20, 1) * Math.min((this.maxLife-this.life)/20, 1);
+      ctx.save();
+      ctx.globalAlpha = this.alpha * fade;
+      ctx.fillStyle = this.color;
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  for(let i=0;i<60;i++) particles.push(new Particle());
+
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{ p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+// ══ COUNT-UP ANIMATION ══
+function countUp(el, target, duration=800){
+  const start = 0;
+  const startTime = performance.now();
+  function step(now){
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed/duration, 1);
+    const ease = 1 - Math.pow(1-progress, 3);
+    el.textContent = Math.round(start + (target-start)*ease);
+    if(progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Patch renderBE and renderPUSH to trigger count-up on KPI vals
+const _origRenderBE = renderBE;
+function renderBEAnimated(mes){
+  _origRenderBE(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#be-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 600);
+    });
+  }, 50);
+}
+
+const _origRenderPUSH = renderPUSH;
+function renderPUSHAnimated(mes){
+  _origRenderPUSH(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#push-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 600);
+    });
+  }, 50);
+}
+
+// Override setBeMes and setPushMes
+const _origSetBeMes = setBeMes;
+setBeMes = function(mes){
+  _origSetBeMes(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#be-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 500);
+    });
+  }, 80);
+};
+
+const _origSetPushMes = setPushMes;
+setPushMes = function(mes){
+  _origSetPushMes(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#push-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 500);
+    });
+  }, 80);
+};
+
+// Animate big numbers on overview
+function animateOverviewNums(){
+  document.querySelectorAll('.bsc-val').forEach(el=>{
+    const n = parseInt(el.textContent)||0;
+    countUp(el, n, 1000);
+  });
+}
+setTimeout(animateOverviewNums, 300);
+
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f6fa;
+  --bg2: #eef0f8;
+  --bg3: #e8eaf2;
+  --card: #ffffff;
+  --card2: #f0f2fa;
+  --brd: rgba(0,0,50,.1);
+  --brd2: rgba(0,0,50,.18);
+  --tx: #0d0f2d;
+  --tx2: #4a506e;
+  --tx3: #9098b8;
+  --cyan: #00e5ff;
+  --pink: #ff2d78;
+  --violet: #a855f7;
+  --gold: #fbbf24;
+  --green: #10f075;
+  --orange: #ff7620;
+  --r: 14px;
+  --rlg: 20px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── ANIMATED BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 20%, rgba(43,79,255,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 90% 80%, rgba(168,85,247,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255,45,120,.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── HEADER ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(245,246,250,.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--brd);
+  padding: 0 2rem;
+  display: flex; align-items: center; gap: 1.5rem;
+  height: 62px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px; font-weight: 800;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -.3px;
+}
+.header-sub {
+  font-size: 12px; color: var(--tx3);
+  font-family: 'Space Mono', monospace;
+}
+.header-spacer { flex: 1; }
+.header-actions { display: flex; gap: 8px; }
+
+/* NAV TABS */
+.nav { display: flex; gap: 2px; margin-left: 2rem; }
+.ntab {
+  padding: 6px 16px; border: none; background: none;
+  font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500;
+  cursor: pointer; color: var(--tx2); border-radius: 8px;
+  transition: all .2s; white-space: nowrap;
+}
+.ntab:hover { background: rgba(43,79,255,.07); color: var(--tx); }
+.ntab.on {
+  background: rgba(0,229,255,.12);
+  color: var(--cyan);
+}
+.ntab .dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; margin-right: 6px;
+  background: var(--cyan);
+}
+.ntab.pink .dot { background: var(--pink); }
+.ntab.pink.on { background: rgba(255,45,120,.12); color: var(--pink); }
+.ntab.violet .dot { background: var(--violet); }
+.ntab.violet.on { background: rgba(168,85,247,.12); color: var(--violet); }
+
+/* BUTTONS */
+.btn {
+  padding: 7px 16px; border-radius: 8px; border: 1px solid var(--brd2);
+  background: rgba(0,0,50,.04); color: var(--tx2);
+  font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500;
+  cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: rgba(43,79,255,.08); color: var(--tx); }
+.btn.primary {
+  background: linear-gradient(135deg, var(--cyan), #0099bb);
+  color: #000; border-color: transparent; font-weight: 600;
+}
+.btn.primary:hover { opacity: .9; transform: translateY(-1px); }
+
+/* PAGES */
+.page { display: none; position: relative; z-index: 1; }
+.page.on { display: block; }
+
+/* ── MAIN LAYOUT ── */
+.dashboard { padding: 1.5rem 2rem; max-width: 1400px; margin: 0 auto; }
+
+/* SECTION HEADER */
+.sec-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 1.25rem; margin-top: 1.5rem;
+}
+.sec-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px currentColor;
+}
+.sec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700; letter-spacing: -.3px;
+}
+.sec-badge {
+  font-size: 11px; padding: 2px 10px; border-radius: 100px;
+  font-family: 'Space Mono', monospace; font-weight: 700;
+}
+
+/* MONTH SELECTOR */
+.month-selector {
+  display: flex; gap: 8px; margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.msel {
+  padding: 8px 20px; border-radius: 100px;
+  border: 1.5px solid var(--brd2);
+  background: #ffffff; color: var(--tx2);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all .2s; font-family: 'Syne', sans-serif;
+  letter-spacing: .02em;
+}
+.msels-wrap { display: flex; gap: 8px; }
+.msels-label { font-size: 12px; color: var(--tx3); align-self: center; font-family: 'Space Mono', monospace; }
+
+/* KPIS */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px; margin-bottom: 1.5rem;
+}
+.kpi {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,50,.1);
+  border-radius: var(--rlg);
+  padding: 1.1rem 1.25rem;
+  position: relative; overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+  cursor: default;
+}
+.kpi:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(43,79,255,.12); }
+.kpi::before {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+}
+.kpi.c1::before { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+.kpi.c2::before { background: var(--pink); box-shadow: 0 0 8px var(--pink); }
+.kpi.c3::before { background: var(--violet); box-shadow: 0 0 8px var(--violet); }
+.kpi.c4::before { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.kpi.c5::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.kpi.c6::before { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+.kpi.total::before { height: 3px; background: linear-gradient(90deg, var(--cyan), var(--violet)); box-shadow: 0 0 12px var(--cyan); }
+.kpi-label { font-size: 11px; color: var(--tx3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+.kpi-val {
+  font-family: 'Syne', sans-serif; font-size: 38px; font-weight: 800;
+  line-height: 1; margin-bottom: 4px;
+  transition: all .3s;
+}
+.kpi-sub { font-size: 11px; color: var(--tx3); }
+.kpi.c1 .kpi-val { color: var(--cyan); }
+.kpi.c2 .kpi-val { color: var(--pink); }
+.kpi.c3 .kpi-val { color: var(--violet); }
+.kpi.c4 .kpi-val { color: var(--gold); }
+.kpi.c5 .kpi-val { color: var(--green); }
+.kpi.c6 .kpi-val { color: var(--orange); }
+.kpi.total .kpi-val { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 44px; }
+
+/* CHARTS GRID */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px; margin-bottom: 1.5rem;
+}
+.charts-grid.full { grid-template-columns: 1fr; }
+.chart-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,50,.1);
+  border-radius: var(--rlg);
+  padding: 1.25rem;
+  position: relative; overflow: hidden;
+}
+.chart-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+}
+.chart-card.cyan-top::before { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+.chart-card.pink-top::before { background: linear-gradient(90deg, transparent, var(--pink), transparent); }
+.chart-card.violet-top::before { background: linear-gradient(90deg, transparent, var(--violet), transparent); }
+.chart-card.gold-top::before { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.chart-title {
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+  margin-bottom: 4px; color: var(--tx);
+}
+.chart-sub { font-size: 11px; color: var(--tx3); margin-bottom: 1rem; font-family: 'Space Mono', monospace; }
+.chart-wrap { position: relative; height: 240px; }
+
+/* TABLE */
+.data-table {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,50,.1);
+  border-radius: var(--rlg);
+  overflow: hidden; margin-bottom: 1.5rem;
+}
+.data-table-head {
+  padding: .85rem 1.25rem;
+  border-bottom: 1px solid rgba(0,0,50,.1);
+  display: flex; align-items: center; gap: 10px;
+}
+.dt-scroll { overflow-x: auto; }
+table.dt {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+table.dt th {
+  padding: 10px 16px; text-align: left;
+  font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--tx3); background: rgba(0,0,50,.03);
+  border-bottom: 1px solid var(--brd);
+  font-family: 'Space Mono', monospace;
+  white-space: nowrap;
+}
+table.dt td {
+  padding: 10px 16px; border-bottom: .5px solid var(--brd);
+  color: var(--tx2); white-space: nowrap;
+}
+table.dt tr:last-child td { border-bottom: none; }
+table.dt tr:hover td { background: rgba(0,0,50,.03); }
+table.dt td.med-name { color: var(--tx); font-weight: 500; }
+table.dt td.num { font-family: 'Space Mono', monospace; color: var(--cyan); font-weight: 700; text-align: right; }
+table.dt td.num.pink { color: var(--pink); }
+table.dt td.num.total-row { color: var(--gold); font-size: 14px; }
+table.dt tr.total-row td { background: rgba(251,191,36,.04); border-top: 1px solid rgba(251,191,36,.15); }
+
+/* TREND BAR */
+.trend-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.trend-bar { height: 6px; border-radius: 3px; min-width: 4px; transition: width .3s; }
+.trend-val { font-size: 11px; color: var(--tx3); font-family: 'Space Mono', monospace; min-width: 20px; }
+
+/* MONTH INDICATOR */
+.month-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 11px; font-weight: 600; font-family: 'Syne', sans-serif;
+}
+
+/* ADD DATA PANEL */
+.add-panel {
+  background: #f0f2fa;
+  border: 1px solid var(--brd);
+  border-radius: var(--rlg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.add-panel h3 {
+  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+  margin-bottom: 4px;
+}
+.add-panel p { font-size: 13px; color: var(--tx2); margin-bottom: 1.25rem; line-height: 1.6; }
+.form-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px; margin-bottom: 1rem;
+}
+.form-field label {
+  display: block; font-size: 11px; color: var(--tx3); margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: .06em; font-family: 'Space Mono', monospace;
+}
+.form-field input, .form-field select {
+  width: 100%; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--brd2); background: #f0f2fa;
+  color: var(--tx); font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: border-color .15s;
+}
+.form-field input:focus, .form-field select:focus {
+  outline: none; border-color: var(--cyan);
+}
+.form-field select option { background: #f0f2fa; }
+
+/* ALERT */
+.alert {
+  padding: 10px 16px; border-radius: 10px; font-size: 13px;
+  border: 1px solid; margin-bottom: 1rem; display: none;
+}
+.alert.success { background: rgba(16,240,117,.08); border-color: rgba(16,240,117,.3); color: var(--green); }
+.alert.error { background: rgba(255,45,120,.08); border-color: rgba(255,45,120,.3); color: var(--pink); }
+
+/* OVERVIEW PAGE */
+.overview-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; margin-bottom: 1.5rem;
+}
+.big-stat-card {
+  background: #ffffff; border: 1px solid rgba(0,0,50,.1);
+  border-radius: var(--rlg); padding: 1.75rem;
+  position: relative; overflow: hidden;
+}
+.big-stat-card::after {
+  content: '';
+  position: absolute; right: -20px; bottom: -20px;
+  width: 120px; height: 120px; border-radius: 50%;
+  opacity: .08;
+}
+.big-stat-card.be::after { background: var(--cyan); box-shadow: 0 0 40px var(--cyan); }
+.big-stat-card.push::after { background: var(--pink); box-shadow: 0 0 40px var(--pink); }
+.bsc-label { font-size: 11px; color: var(--tx3); text-transform: uppercase; letter-spacing: .08em; font-family: 'Space Mono', monospace; margin-bottom: 8px; }
+.bsc-val { font-family: 'Syne', sans-serif; font-size: 64px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.bsc-val.cyan { color: var(--cyan); text-shadow: 0 0 30px rgba(0,229,255,.3); }
+.bsc-val.pink { color: var(--pink); text-shadow: 0 0 30px rgba(255,45,120,.3); }
+.bsc-sub { font-size: 13px; color: var(--tx2); }
+.bsc-type { font-size: 11px; padding: 3px 10px; border-radius: 100px; font-weight: 600; font-family: 'Syne', sans-serif; display: inline-block; margin-top: 10px; }
+.be .bsc-type { background: rgba(0,229,255,.12); color: var(--cyan); }
+.push .bsc-type { background: rgba(255,45,120,.12); color: var(--pink); }
+
+/* SCROLL ANIMATION */
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.anim { animation: fadeUp .4s ease both; }
+.anim-d1 { animation-delay: .05s; }
+.anim-d2 { animation-delay: .1s; }
+.anim-d3 { animation-delay: .15s; }
+.anim-d4 { animation-delay: .2s; }
+.anim-d5 { animation-delay: .25s; }
+.anim-d6 { animation-delay: .3s; }
+
+/* GLOW PULSE */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.pulse { animation: pulse 2s ease-in-out infinite; }
+
+  /* ── LIGHT THEME OVERRIDES ── */
+  body { background: #f5f6fa !important; }
+  .header { background: rgba(245,246,250,.95) !important; border-bottom: 1px solid rgba(0,0,80,.1) !important; }
+  .card, .chart-card, .kpi, .data-table, .big-stat-card, .add-panel { background: #ffffff !important; border-color: rgba(0,0,80,.1) !important; }
+  table.dt th { background: #f5f6fa !important; color: #6b7280 !important; }
+  table.dt tr:hover td { background: #f9fafb !important; }
+  table.rt th { background: #f0f2fa !important; }
+  .msels-label { color: #9098b8 !important; }
+  .msel, .msels { background: #ffffff !important; }
+  .form-field input, .form-field select { background: #f5f6fa !important; border-color: rgba(0,0,80,.2) !important; }
+  .btn { background: rgba(0,0,80,.04) !important; border-color: rgba(0,0,80,.15) !important; color: #4a506e !important; }
+  .logo-sub { color: #6b7280 !important; }
+
+  /* ══ ANIMATED EFFECTS ══ */
+  
+  /* Floating particles canvas */
+  #particles-canvas {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; opacity: .5;
+  }
+
+  /* Glowing title */
+  .logo-text {
+    font-family: 'Syne', sans-serif !important;
+    font-size: 17px !important; font-weight: 800 !important;
+    background: linear-gradient(90deg, #2b4fff, #a855f7, #ff2d78, #2b4fff) !important;
+    background-size: 300% 100% !important;
+    -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important;
+    animation: gradMove 4s linear infinite !important;
+    letter-spacing: -.3px;
+  }
+  @keyframes gradMove { 0%{background-position:0%} 100%{background-position:300%} }
+
+  /* KPI number count-up animation */
+  .kpi-val {
+    transition: all .4s ease !important;
+    display: inline-block !important;
+  }
+
+  /* Shimmer on kpi cards */
+  .kpi {
+    position: relative; overflow: hidden;
+    transition: transform .2s, box-shadow .2s !important;
+  }
+  .kpi::after {
+    content: '';
+    position: absolute; top: -50%; left: -60%;
+    width: 40%; height: 200%;
+    background: linear-gradient(105deg, transparent, rgba(255,255,255,.15), transparent);
+    transform: skewX(-15deg);
+    animation: shimmer 3.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0% { left: -60%; opacity:0; }
+    30% { opacity: 1; }
+    50% { left: 130%; opacity:0; }
+    100% { left: 130%; opacity:0; }
+  }
+
+  /* Big stat card pulse glow */
+  .big-stat-card {
+    transition: transform .2s, box-shadow .25s !important;
+  }
+  .big-stat-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 20px 60px rgba(43,79,255,.15) !important;
+  }
+  .big-stat-card.be { border-top: 2px solid #2b4fff !important; }
+  .big-stat-card.push { border-top: 2px solid #ff2d78 !important; }
+  .bsc-val.cyan {
+    animation: pulseNum 3s ease-in-out infinite !important;
+  }
+  .bsc-val.pink {
+    animation: pulseNumPink 3s ease-in-out infinite !important;
+  }
+  @keyframes pulseNum {
+    0%,100%{ text-shadow: 0 0 20px rgba(43,79,255,.3); }
+    50%{ text-shadow: 0 0 40px rgba(43,79,255,.6), 0 0 80px rgba(43,79,255,.2); }
+  }
+  @keyframes pulseNumPink {
+    0%,100%{ text-shadow: 0 0 20px rgba(255,45,120,.3); }
+    50%{ text-shadow: 0 0 40px rgba(255,45,120,.6), 0 0 80px rgba(255,45,120,.2); }
+  }
+
+  /* Chart card hover */
+  .chart-card {
+    transition: transform .2s, box-shadow .25s !important;
+  }
+  .chart-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 40px rgba(43,79,255,.1) !important;
+  }
+
+  /* Month selector buttons animated */
+  .msels {
+    transition: all .2s !important;
+    position: relative; overflow: hidden;
+  }
+  .msels::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.2), transparent);
+    opacity: 0; transition: opacity .2s;
+  }
+  .msels:hover::after { opacity: 1; }
+  .msels:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(43,79,255,.15) !important; }
+
+  /* Typewriter for header subtitle */
+  .header-sub {
+    font-family: 'Space Mono', monospace !important;
+    font-size: 11px !important;
+    overflow: hidden; white-space: nowrap;
+    border-right: 2px solid #a855f7;
+    width: 0; animation: typewriter 1.5s steps(22) .5s forwards, blink .7s step-end infinite !important;
+  }
+  @keyframes typewriter { to { width: 160px; } }
+  @keyframes blink { 50%{ border-color: transparent; } }
+
+  /* Fade-up for page sections */
+  .dashboard > * { animation: fadeUpIn .5s ease both; }
+  .dashboard > *:nth-child(1){ animation-delay:.05s }
+  .dashboard > *:nth-child(2){ animation-delay:.1s }
+  .dashboard > *:nth-child(3){ animation-delay:.15s }
+  .dashboard > *:nth-child(4){ animation-delay:.2s }
+  .dashboard > *:nth-child(5){ animation-delay:.25s }
+  @keyframes fadeUpIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Table row slide-in */
+  table.dt tbody tr {
+    animation: rowIn .3s ease both;
+  }
+  @keyframes rowIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+
+  /* Nav tab active indicator glow */
+  .ntab.on {
+    box-shadow: 0 0 0 1px rgba(43,79,255,.3), inset 0 0 20px rgba(43,79,255,.08) !important;
+  }
+  .ntab.pink.on {
+    box-shadow: 0 0 0 1px rgba(255,45,120,.3), inset 0 0 20px rgba(255,45,120,.08) !important;
+  }
+
+  /* Logo icon spin on hover */
+  .logo-icon { 
+    transition: transform .4s ease !important;
+    animation: logoPulse 4s ease-in-out infinite !important;
+  }
+  @keyframes logoPulse {
+    0%,100%{ box-shadow: 0 0 0 0 rgba(43,79,255,.4); }
+    50%{ box-shadow: 0 0 0 8px rgba(43,79,255,0); }
+  }
+  .logo:hover .logo-icon { transform: rotate(20deg) scale(1.1) !important; }
+
+  /* KPI total special glow */
+  .kpi.total {
+    background: linear-gradient(135deg, #fff 60%, rgba(43,79,255,.05)) !important;
+  }
+
+  /* Trend bars animated width */
+  .trend-bar {
+    animation: growBar .8s ease both !important;
+  }
+  @keyframes growBar { from{width:0!important} }
+
+  /* Section header dot pulse */
+  .sec-dot {
+    animation: dotPulse 2s ease-in-out infinite !important;
+    background: currentColor !important;
+    width: 10px !important; height: 10px !important;
+  }
+  @keyframes dotPulse {
+    0%,100%{ transform:scale(1); opacity:1; }
+    50%{ transform:scale(1.5); opacity:.7; }
+  }
+
+  /* Add panel glow on focus */
+  .add-panel { border: 1px solid rgba(168,85,247,.2) !important; transition: border-color .3s !important; }
+  .add-panel:focus-within { border-color: rgba(168,85,247,.5) !important; box-shadow: 0 0 30px rgba(168,85,247,.08) !important; }
+
+</style>
 </head>
 <body>
-<header>
-  <span>🏥</span>
-  <h1>Generador de Formatos Médicos — Extracción IA desde pantallazos</h1>
-</header>
 
-<div class="stepper" id="stepper">
-  <div class="step active" id="s1"><span class="num">1</span>Formato</div>
-  <div class="arrow">›</div>
-  <div class="step" id="s2"><span class="num">2</span>Archivo Word</div>
-  <div class="arrow">›</div>
-  <div class="step" id="s3"><span class="num">3</span>Asignar</div>
-  <div class="arrow">›</div>
-  <div class="step" id="s4"><span class="num">4</span>Revisar</div>
-  <div class="arrow">›</div>
-  <div class="step" id="s5"><span class="num">5</span>Listo</div>
+<canvas id="particles-canvas"></canvas>
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">💊</div>
+    <div>
+      <div class="logo-text">BE y PUSH 2026</div>
+      <div class="header-sub">Farmacia · Antibióticos</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="ntab on" onclick="goTo('overview')"><span class="dot"></span>Resumen General</button>
+    <button class="ntab" onclick="goTo('be')"><span class="dot"></span>Bomba Elastomérica</button>
+    <button class="ntab pink" onclick="goTo('push')"><span class="dot pink"></span>Técnica Push</button>
+    <button class="ntab violet" onclick="goTo('add')"><span class="dot violet"></span>Agregar Datos</button>
+  </nav>
+  <div class="header-spacer"></div>
+  <div class="header-actions">
+    <button class="btn" onclick="window.print()">🖨 Imprimir</button>
+  </div>
 </div>
 
-<div class="container">
+<!-- ════════════════════════════════ OVERVIEW ════════════════════════════════ -->
+<div class="page on" id="page-overview">
+<div class="dashboard">
 
-  <!-- STEP 1 -->
-  <div id="step1" class="card">
-    <h2>Seleccionar formato</h2>
-    <p class="subtitle">Elige el tipo de documento que necesitas generar</p>
-    <div class="format-grid">
-      <div class="format-card" id="card_formulas_domicilio" onclick="selectFormat('formulas_domicilio')">
-        <div class="icon">🏠</div><div class="name">Fórmulas domicilio</div><div class="desc">Paciente + dirección + medicamentos</div>
-      </div>
-      <div class="format-card" id="card_salud_casa" onclick="selectFormat('salud_casa')">
-        <div class="icon">💊</div><div class="name">Salud en casa</div><div class="desc">Paciente + medicamentos</div>
-      </div>
-      <div class="format-card" id="card_laboratorios" onclick="selectFormat('laboratorios')">
-        <div class="icon">🔬</div><div class="name">Laboratorios</div><div class="desc">Formato tabla programación</div>
-      </div>
-      <div class="format-card" id="card_cambio_ips" onclick="selectFormat('cambio_ips')">
-        <div class="icon">🔄</div><div class="name">Cambio de IPS</div><div class="desc">Paciente + IPS origen/destino</div>
-      </div>
-      <div class="format-card" id="card_solicitud_laboratorios" onclick="selectFormat('solicitud_laboratorios')">
-        <div class="icon">🧪</div><div class="name">Solicitud laboratorios</div><div class="desc">Paciente + muestra + laboratorios</div>
-      </div>
-      <div class="format-card" id="card_formulas_control" onclick="selectFormat('formulas_control')">
-        <div class="icon">📋</div><div class="name">Fórmulas de Control</div><div class="desc">Por paciente: medicamento, dosis y turno</div>
-      </div>
+  <div class="sec-header anim">
+    <div class="sec-dot" style="color:var(--cyan)"></div>
+    <div class="sec-title">Resumen General — Marzo · Abril · Mayo 2025</div>
+    <div class="sec-badge" style="background:rgba(0,229,255,.1);color:var(--cyan)">CONSOLIDADO</div>
+  </div>
+
+  <div class="overview-grid anim anim-d1">
+    <div class="big-stat-card be">
+      <div class="bsc-label">Total pacientes — Bomba Elastomérica</div>
+      <div class="bsc-val cyan">38</div>
+      <div class="bsc-sub">Pacientes únicos · primera atención</div>
+      <div class="bsc-type">BOMBA ELASTOMÉRICA</div>
     </div>
-    <div class="btn-row" style="justify-content:flex-end">
-      <button class="btn btn-secondary" id="btn1next" onclick="selectFormat_next()">Siguiente →</button>
+    <div class="big-stat-card push">
+      <div class="bsc-label">Total pacientes — Técnica Push</div>
+      <div class="bsc-val pink">55</div>
+      <div class="bsc-sub">Pacientes únicos · primera atención</div>
+      <div class="bsc-type">TÉCNICA PUSH</div>
     </div>
   </div>
 
-  <!-- STEP 2 -->
-  <div id="step2" class="card" style="display:none">
-    <h2>Subir archivo Word con pantallazos</h2>
-    <p class="subtitle">Pega todos los pantallazos en un documento .docx y súbelo aquí.</p>
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <div class="icon">📄</div>
-      <p><strong>Clic o arrastra</strong> el archivo .docx aquí</p>
-      <p style="margin-top:6px;font-size:0.76rem">Solo archivos .docx</p>
+  <div class="charts-grid anim anim-d2">
+    <div class="chart-card cyan-top">
+      <div class="chart-title">Bomba Elastomérica — por mes</div>
+      <div class="chart-sub">Pacientes únicos Marzo · Abril · Mayo</div>
+      <div class="chart-wrap"><canvas id="ov-be-mes"></canvas></div>
     </div>
-    <input type="file" id="fileInput" accept=".docx" onchange="handleFile(event)" />
-    <div id="imgFoundMsg" style="font-size:0.83rem;color:#718096;margin-top:6px">Imágenes encontradas: <strong id="imgCount">0</strong></div>
-    <div id="imgPreviewList" class="img-list"></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(1)">← Volver</button>
-      <button class="btn btn-primary" id="btn2next" disabled onclick="goStep(3)">Siguiente →</button>
+    <div class="chart-card pink-top">
+      <div class="chart-title">Técnica Push — por mes</div>
+      <div class="chart-sub">Pacientes únicos Marzo · Abril · Mayo</div>
+      <div class="chart-wrap"><canvas id="ov-push-mes"></canvas></div>
     </div>
   </div>
 
-  <!-- STEP 3 -->
-  <div id="step3" class="card" style="display:none">
-    <h2>Asignar imágenes</h2>
-    <p class="subtitle">Asigna una o varias imágenes por sección.</p>
-    <div id="assignSections"></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(2)">← Volver</button>
-      <button class="btn btn-primary" onclick="goStep(4); extractData()">Extraer datos con IA →</button>
+  <div class="charts-grid anim anim-d3">
+    <div class="chart-card violet-top">
+      <div class="chart-title">Bomba Elastomérica — por medicamento</div>
+      <div class="chart-sub">Total acumulado 3 meses</div>
+      <div class="chart-wrap"><canvas id="ov-be-med"></canvas></div>
+    </div>
+    <div class="chart-card gold-top">
+      <div class="chart-title">Técnica Push — por medicamento</div>
+      <div class="chart-sub">Total acumulado 3 meses</div>
+      <div class="chart-wrap"><canvas id="ov-push-med"></canvas></div>
     </div>
   </div>
 
-  <!-- STEP 4 -->
-  <div id="step4" class="card" style="display:none">
-    <h2>Revisar y completar datos</h2>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#68d391"></div>Extraído por IA</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#f6ad55"></div>Completar manual</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#90cdf4"></div>Automático</div>
+  <div class="data-table anim anim-d4">
+    <div class="data-table-head">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">Tabla Comparativa Completa</div>
+      <div style="font-size:11px;color:var(--tx3);font-family:'Space Mono',monospace;margin-left:auto">Todos los medicamentos · todos los meses</div>
     </div>
-    <div id="progressArea" style="display:none">
-      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-      <div class="status-msg" id="statusMsg">Procesando imágenes con IA...</div>
-    </div>
-    <div id="reviewFields"></div>
-    <div id="previewArea" style="display:none">
-      <h3 style="font-size:0.95rem;font-weight:700;color:#2d3748;margin:18px 0 8px">Vista previa del Excel:</h3>
-      <div style="overflow-x:auto"><table class="preview-table" id="previewTable"></table></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(3)">← Volver</button>
-      <button class="btn btn-success" onclick="generateExcel()">Descargar Excel ↓</button>
+    <div class="dt-scroll">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th>Técnica</th><th>Medicamento</th>
+            <th style="text-align:right">Marzo</th>
+            <th style="text-align:right">Abril</th>
+            <th style="text-align:right">Mayo</th>
+            <th style="text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="overview-tbody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- STEP 5 -->
-  <div id="step5" class="card" style="display:none">
-    <div class="success-box">
-      <div class="check">✅</div>
-      <h3>¡Excel generado exitosamente!</h3>
-      <p>El archivo fue descargado con todos los datos extraídos.</p>
-      <div style="margin-top:20px">
-        <button class="btn btn-primary" onclick="resetAll()">Procesar nuevo caso</button>
+</div>
+</div>
+
+<!-- ════════════════════════════════ BOMBA ELASTOMÉRICA ════════════════════════════════ -->
+<div class="page" id="page-be">
+<div class="dashboard">
+
+  <div class="sec-header anim">
+    <div class="sec-dot" style="color:var(--cyan)"></div>
+    <div class="sec-title">Bomba Elastomérica</div>
+    <div class="sec-badge" style="background:rgba(0,229,255,.1);color:var(--cyan)">5 ANTIBIÓTICOS</div>
+  </div>
+
+  <div class="msels-wrap" style="margin-bottom:1.5rem">
+    <span class="msels-label">VER MES →</span>
+    <button class="msels be-msels msels-on" onclick="setBeMes('Todos')">Todos</button>
+    <button class="msels be-msels" onclick="setBeMes('Marzo')">Marzo</button>
+    <button class="msels be-msels" onclick="setBeMes('Abril')">Abril</button>
+    <button class="msels be-msels" onclick="setBeMes('Mayo')">Mayo</button>
+  </div>
+
+  <div class="kpi-grid" id="be-kpis"></div>
+
+  <div class="charts-grid anim anim-d2">
+    <div class="chart-card cyan-top">
+      <div class="chart-title">Pacientes por Medicamento</div>
+      <div class="chart-sub" id="be-chart1-sub">Todos los meses</div>
+      <div class="chart-wrap"><canvas id="be-chart1"></canvas></div>
+    </div>
+    <div class="chart-card violet-top">
+      <div class="chart-title">Evolución Mensual</div>
+      <div class="chart-sub">Tendencia Marzo → Abril → Mayo</div>
+      <div class="chart-wrap"><canvas id="be-chart2"></canvas></div>
+    </div>
+  </div>
+
+  <div class="data-table anim anim-d3">
+    <div class="data-table-head">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">Detalle por Medicamento</div>
+      <span id="be-mes-badge" class="month-pill" style="background:rgba(0,229,255,.12);color:var(--cyan)">Todos los meses</span>
+    </div>
+    <div class="dt-scroll">
+      <table class="dt"><thead><tr>
+        <th>Medicamento</th>
+        <th style="text-align:right">Marzo</th>
+        <th style="text-align:right">Abril</th>
+        <th style="text-align:right">Mayo</th>
+        <th style="text-align:right">Total</th>
+        <th>Distribución</th>
+      </tr></thead>
+      <tbody id="be-tbody"></tbody></table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════ PUSH ════════════════════════════════ -->
+<div class="page" id="page-push">
+<div class="dashboard">
+
+  <div class="sec-header anim">
+    <div class="sec-dot" style="color:var(--pink)"></div>
+    <div class="sec-title">Técnica Push</div>
+    <div class="sec-badge" style="background:rgba(255,45,120,.1);color:var(--pink)">6 ANTIBIÓTICOS</div>
+  </div>
+
+  <div class="msels-wrap" style="margin-bottom:1.5rem">
+    <span class="msels-label">VER MES →</span>
+    <button class="msels push-msels msels-on" onclick="setPushMes('Todos')">Todos</button>
+    <button class="msels push-msels" onclick="setPushMes('Marzo')">Marzo</button>
+    <button class="msels push-msels" onclick="setPushMes('Abril')">Abril</button>
+    <button class="msels push-msels" onclick="setPushMes('Mayo')">Mayo</button>
+  </div>
+
+  <div class="kpi-grid" id="push-kpis"></div>
+
+  <div class="charts-grid anim anim-d2">
+    <div class="chart-card pink-top">
+      <div class="chart-title">Pacientes por Medicamento</div>
+      <div class="chart-sub" id="push-chart1-sub">Todos los meses</div>
+      <div class="chart-wrap"><canvas id="push-chart1"></canvas></div>
+    </div>
+    <div class="chart-card gold-top">
+      <div class="chart-title">Evolución Mensual</div>
+      <div class="chart-sub">Tendencia Marzo → Abril → Mayo</div>
+      <div class="chart-wrap"><canvas id="push-chart2"></canvas></div>
+    </div>
+  </div>
+
+  <div class="data-table anim anim-d3">
+    <div class="data-table-head">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">Detalle por Medicamento</div>
+      <span id="push-mes-badge" class="month-pill" style="background:rgba(255,45,120,.12);color:var(--pink)">Todos los meses</span>
+    </div>
+    <div class="dt-scroll">
+      <table class="dt"><thead><tr>
+        <th>Medicamento</th>
+        <th style="text-align:right">Marzo</th>
+        <th style="text-align:right">Abril</th>
+        <th style="text-align:right">Mayo</th>
+        <th style="text-align:right">Total</th>
+        <th>Distribución</th>
+      </tr></thead>
+      <tbody id="push-tbody"></tbody></table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════ AGREGAR DATOS ════════════════════════════════ -->
+<div class="page" id="page-add">
+<div class="dashboard">
+
+  <div class="sec-header anim">
+    <div class="sec-dot" style="color:var(--violet)"></div>
+    <div class="sec-title">Agregar Datos Mensuales</div>
+    <div class="sec-badge" style="background:rgba(168,85,247,.1);color:var(--violet)">ALIMENTAR TABLERO</div>
+  </div>
+
+  <div class="add-panel anim anim-d1">
+    <h3>Agregar nuevo mes</h3>
+    <p>Ingresa los datos del nuevo mes. Selecciona la técnica, el mes, el medicamento y el número de pacientes únicos. El tablero se actualizará automáticamente y guardará los datos.</p>
+    <div class="alert success" id="alert-ok">✓ Datos guardados correctamente. El tablero se ha actualizado.</div>
+    <div class="alert error" id="alert-err">✗ Por favor completa todos los campos.</div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Técnica</label>
+        <select id="f-tecnica">
+          <option value="">Seleccionar…</option>
+          <option value="be">Bomba Elastomérica</option>
+          <option value="push">Técnica Push</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Mes</label>
+        <select id="f-mes">
+          <option value="">Seleccionar…</option>
+          <option>Junio</option><option>Julio</option><option>Agosto</option>
+          <option>Septiembre</option><option>Octubre</option><option>Noviembre</option>
+          <option>Diciembre</option><option>Enero</option><option>Febrero</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Medicamento</label>
+        <select id="f-med">
+          <option value="">Seleccionar…</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Nº Pacientes únicos</label>
+        <input type="number" id="f-num" min="0" placeholder="0">
       </div>
     </div>
+    <button class="btn primary" onclick="addData()">+ Agregar al tablero</button>
   </div>
 
+  <div class="data-table anim anim-d2">
+    <div class="data-table-head">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">Historial de datos guardados</div>
+    </div>
+    <div class="dt-scroll">
+      <table class="dt">
+        <thead><tr><th>Técnica</th><th>Mes</th><th>Medicamento</th><th style="text-align:right">Pacientes</th><th>Registrado</th></tr></thead>
+        <tbody id="history-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
 </div>
 
 <script>
-let selectedFormat = null;
-let extractedImages = [];
-let assignedImages = {};
-let extractedData = {};
-let currentMeds = [];
-let currentLabs = [];
+Chart.defaults.color = '#4a506e';
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
-// ===================== FORMATO CONFIG =====================
-const FORMATS = {
-  formulas_domicilio: {
-    name: 'Fórmulas domicilio',
-    sections: ['Datos del paciente', 'Dirección y contacto', 'Medicamentos'],
-    fields: [
-      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
-      { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
-      { key: 'direccion',             label: 'Dirección',             type: 'ai',     section: 'Dirección y contacto' },
-      { key: 'telefono',              label: 'Teléfono',              type: 'ai',     section: 'Dirección y contacto' },
-      { key: 'barrio',                label: 'Barrio',                type: 'ai',     section: 'Dirección y contacto' },
-      { key: 'ciudad',                label: 'Ciudad',                type: 'ai',     section: 'Dirección y contacto' },
-      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'Dirección y contacto' },
-    ],
-    hasMeds: true,
-    medFields: ['medicamento','dosis','frecuencia','cantidad','via'],
+// ════ DATA ════
+const DATA = {
+  be: {
+    meds: ['Aztreonam','Clindamicina','Cefazolina','Meropenem','Piperacilina Sódica'],
+    meses: ['Marzo','Abril','Mayo'],
+    vals: {
+      'Aztreonam':    {'Marzo':1,'Abril':1,'Mayo':0},
+      'Clindamicina': {'Marzo':6,'Abril':6,'Mayo':3},
+      'Cefazolina':   {'Marzo':0,'Abril':1,'Mayo':0},
+      'Meropenem':    {'Marzo':1,'Abril':1,'Mayo':1},
+      'Piperacilina Sódica': {'Marzo':5,'Abril':5,'Mayo':7},
+    },
+    totalesMes: {'Marzo':13,'Abril':14,'Mayo':11}
   },
-  salud_casa: {
-    name: 'Salud en casa',
-    sections: ['Datos del paciente', 'Medicamentos'],
-    fields: [
-      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
-      { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
-      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'Datos del paciente' },
-    ],
-    hasMeds: true,
-    medFields: ['medicamento','dosis','frecuencia','cantidad','via'],
-  },
-  laboratorios: {
-    name: 'Laboratorios',
-    sections: ['Datos del paciente', 'Programación'],
-    fields: [
-      { key: 'nombre_paciente',       label: 'Nombre paciente',       type: 'ai',     section: 'Datos del paciente' },
-      { key: 'identificacion_paciente', label: 'Documento Identidad', type: 'ai',     section: 'Datos del paciente' },
-      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
-      { key: 'direccion',             label: 'Dirección atención',    type: 'ai',     section: 'Datos del paciente' },
-      { key: 'barrio',                label: 'Barrio',                type: 'ai',     section: 'Datos del paciente' },
-      { key: 'municipio',             label: 'Municipio',             type: 'ai',     section: 'Datos del paciente' },
-      { key: 'telefono',              label: 'Teléfono / Celular',    type: 'ai',     section: 'Datos del paciente' },
-      { key: 'fecha_prestacion',      label: 'Fecha de programación', type: 'ai',     section: 'Programación' },
-      { key: 'quien_programa',        label: 'Quien programa',        type: 'manual', section: 'Programación' },
-    ],
-    hasMeds: false,
-    isLab: true,
-  },
-  cambio_ips: {
-    name: 'Cambio de IPS',
-    sections: ['Datos del paciente', 'IPS'],
-    fields: [
-      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
-      { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
-      { key: 'ips_origen',            label: 'IPS Origen',            type: 'ai',     section: 'IPS' },
-      { key: 'codigo_ips_origen',     label: 'Código IPS Origen',     type: 'manual', section: 'IPS' },
-      { key: 'ips_destino',           label: 'IPS Destino',           type: 'ai',     section: 'IPS' },
-      { key: 'codigo_ips_destino',    label: 'Código IPS Destino',    type: 'manual', section: 'IPS' },
-      { key: 'medico_solicitante',    label: 'Médico solicitante',    type: 'ai',     section: 'IPS' },
-      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'IPS' },
-    ],
-    hasMeds: false,
-  },
-  solicitud_laboratorios: {
-    name: 'Solicitud laboratorios',
-    sections: ['Datos del paciente', 'Laboratorios'],
-    fields: [
-      { key: 'nombre_paciente',       label: 'Nombre Paciente',       type: 'ai',     section: 'Datos del paciente' },
-      { key: 'identificacion_paciente', label: 'Identificación Paciente', type: 'ai', section: 'Datos del paciente' },
-      { key: 'afiliacion',            label: 'Afiliación',            type: 'ai',     section: 'Datos del paciente' },
-      { key: 'muestra',               label: 'Tipo de muestra',       type: 'ai',     section: 'Laboratorios' },
-      { key: 'quien_genera',          label: 'Quien genera',          type: 'manual', section: 'Laboratorios' },
-    ],
-    hasLabs: true,
-    hasMeds: false,
-  },
-  formulas_control: {
-    name: 'Fórmulas de Control',
-    sections: ['Medicamentos por paciente'],
-    fields: [
-      { key: 'quien_genera',  label: 'Quien genera',      type: 'manual', section: 'Medicamentos por paciente' },
-    ],
-    hasMeds: true,
-    isControl: true,
-  },
+  push: {
+    meds: ['Cefalotina','Cefazolina','Ceftriaxona','Cefepime','Meropenem','Aztreonam'],
+    meses: ['Marzo','Abril','Mayo'],
+    vals: {
+      'Cefalotina':  {'Marzo':0,'Abril':0,'Mayo':0},
+      'Cefazolina':  {'Marzo':0,'Abril':1,'Mayo':0},
+      'Ceftriaxona': {'Marzo':13,'Abril':11,'Mayo':13},
+      'Cefepime':    {'Marzo':1,'Abril':1,'Mayo':1},
+      'Meropenem':   {'Marzo':3,'Abril':4,'Mayo':1},
+      'Aztreonam':   {'Marzo':4,'Abril':1,'Mayo':1},
+    },
+    totalesMes: {'Marzo':21,'Abril':18,'Mayo':16}
+  }
 };
 
-// ===================== NAV =====================
-function goStep(n) {
-  for (let i = 1; i <= 5; i++) {
-    document.getElementById('step' + i).style.display = 'none';
-    document.getElementById('s' + i).className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
-  }
-  document.getElementById('step' + n).style.display = 'block';
-  window.scrollTo(0, 0);
+const COLORS_BE   = ['#00e5ff','#a855f7','#10f075','#fbbf24','#ff7620'];
+const COLORS_PUSH = ['#ff2d78','#fbbf24','#a855f7','#00e5ff','#10f075','#ff7620'];
+const MESES_COLORS = {'Marzo':'#00e5ff','Abril':'#a855f7','Mayo':'#ff2d78'};
+
+let extraData = [];
+try { extraData = JSON.parse(localStorage.getItem('farmacia_extra') || '[]'); } catch(e) {}
+
+// Apply extra data to DATA
+function applyExtra() {
+  extraData.forEach(e => {
+    const d = DATA[e.tecnica];
+    if (!d) return;
+    if (!d.meds.includes(e.med)) { d.meds.push(e.med); COLORS_BE.push('#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')); }
+    if (!d.meses.includes(e.mes)) { d.meses.push(e.mes); }
+    if (!d.vals[e.med]) d.vals[e.med] = {};
+    d.vals[e.med][e.mes] = (d.vals[e.med][e.mes] || 0) + parseInt(e.num);
+    d.totalesMes[e.mes] = (d.totalesMes[e.mes] || 0) + parseInt(e.num);
+  });
+}
+applyExtra();
+
+function totalMed(type, med) {
+  return DATA[type].meses.reduce((s,m) => s + (DATA[type].vals[med]?.[m] || 0), 0);
+}
+function totalMes(type, mes) {
+  return DATA[type].meds.reduce((s,med) => s + (DATA[type].vals[med]?.[mes] || 0), 0);
+}
+function grandTotal(type) {
+  return DATA[type].meds.reduce((s,med) => s + totalMed(type, med), 0);
 }
 
-function selectFormat(fmt) {
-  selectedFormat = fmt;
-  document.querySelectorAll('.format-card').forEach(function(c) { c.classList.remove('selected'); });
-  var card = document.getElementById('card_' + fmt);
-  if (card) card.classList.add('selected');
-  var btn = document.getElementById('btn1next');
-  btn.className = 'btn btn-primary';
-  btn.style.background = '';
-  btn.style.cursor = '';
+// ════ NAVIGATION ════
+function goTo(p) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(x => x.classList.remove('on'));
+  document.getElementById('page-'+p).classList.add('on');
+  const idx = {overview:0,be:1,push:2,add:3}[p];
+  document.querySelectorAll('.ntab')[idx].classList.add('on');
+  if (p==='be') renderBE('Todos');
+  if (p==='push') renderPUSH('Todos');
+  if (p==='add') renderHistory();
+  if (p==='overview') renderOverview();
 }
 
-function selectFormat_next() {
-  if (selectedFormat) goStep(2);
-  else alert('Por favor selecciona un formato primero');
-}
-
-// ===================== STEP 2: UPLOAD =====================
-const dropZone = document.getElementById('dropZone');
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
-dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragging'); if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); });
-function handleFile(event) { if (event.target.files[0]) processFile(event.target.files[0]); }
-
-function processFile(file) {
-  if (!file.name.endsWith('.docx')) { alert('Solo se aceptan archivos .docx'); return; }
-  extractedImages = [];
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const arrayBuffer = e.target.result;
-      const result = await mammoth.convertToHtml({ arrayBuffer }, {
-        convertImage: mammoth.images.imgElement(function(image) {
-          return image.read('base64').then(function(imageData) {
-            const dataUrl = 'data:' + image.contentType + ';base64,' + imageData;
-            extractedImages.push({ name: 'Imagen ' + (extractedImages.length + 1), dataUrl, base64: imageData, mime: image.contentType });
-            return { src: dataUrl };
-          });
-        })
-      });
-      document.getElementById('imgCount').textContent = extractedImages.length;
-      renderImagePreviews();
-      document.getElementById('btn2next').disabled = extractedImages.length === 0;
-    } catch (err) { alert('Error leyendo el archivo: ' + err.message); }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function renderImagePreviews() {
-  const list = document.getElementById('imgPreviewList');
-  list.innerHTML = '';
-  extractedImages.forEach((img, i) => {
-    const el = document.createElement('img');
-    el.src = img.dataUrl; el.className = 'img-thumb'; el.title = img.name;
-    list.appendChild(el);
+// ════ CHARTS REGISTRY ════
+const charts = {};
+function mkChart(id, type, labels, datasets, opts={}) {
+  if (charts[id]) { charts[id].destroy(); }
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  charts[id] = new Chart(canvas, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 600, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: opts.legend ?? false, labels: { color: '#8890b0', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#ffffff', borderColor: 'rgba(0,0,50,.1)', borderWidth: 1,
+          titleColor: '#0d0f2d', bodyColor: '#4a506e', padding: 10,
+        }
+      },
+      scales: opts.noScales ? {} : {
+        x: { grid: { color: 'rgba(0,0,50,.06)' }, ticks: { color: '#9098b8', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(0,0,50,.06)' }, ticks: { color: '#9098b8', font: { size: 11 } }, beginAtZero: true }
+      },
+      ...opts.extra
+    }
   });
 }
 
-// ===================== STEP 3: ASSIGN =====================
-function renderAssignStep() {
-  const fmt = FORMATS[selectedFormat];
-  const container = document.getElementById('assignSections');
-  container.innerHTML = '';
-  fmt.sections.forEach(sec => {
-    const div = document.createElement('div');
-    div.className = 'section-assign';
-    div.innerHTML = `<div class="sec-header">${sec}</div><div class="sec-body"><p>Selecciona las imágenes que corresponden a esta sección:</p><div class="thumb-grid" id="thumbs_${sec.replace(/\s/g,'_')}"></div></div>`;
-    container.appendChild(div);
-    const grid = div.querySelector('.thumb-grid');
-    extractedImages.forEach((img, i) => {
-      const el = document.createElement('img');
-      el.src = img.dataUrl; el.className = 'img-thumb'; el.dataset.idx = i;
-      const secKey = sec.replace(/\s/g,'_');
-      if (assignedImages[secKey] && assignedImages[secKey].includes(i)) el.classList.add('selected');
-      el.onclick = function() {
-        if (!assignedImages[secKey]) assignedImages[secKey] = [];
-        const idx = assignedImages[secKey].indexOf(i);
-        if (idx > -1) { assignedImages[secKey].splice(idx, 1); el.classList.remove('selected'); }
-        else { assignedImages[secKey].push(i); el.classList.add('selected'); }
-      };
-      grid.appendChild(el);
-    });
+// ════ OVERVIEW ════
+function renderOverview() {
+  // BE por mes
+  mkChart('ov-be-mes', 'bar',
+    DATA.be.meses,
+    [{ data: DATA.be.meses.map(m => totalMes('be',m)),
+       backgroundColor: DATA.be.meses.map(m => MESES_COLORS[m] || '#00e5ff'),
+       borderRadius: 8, borderSkipped: false }]
+  );
+  // PUSH por mes
+  mkChart('ov-push-mes', 'bar',
+    DATA.push.meses,
+    [{ data: DATA.push.meses.map(m => totalMes('push',m)),
+       backgroundColor: DATA.push.meses.map(m => MESES_COLORS[m] || '#ff2d78'),
+       borderRadius: 8, borderSkipped: false }]
+  );
+  // BE por med
+  mkChart('ov-be-med', 'doughnut',
+    DATA.be.meds,
+    [{ data: DATA.be.meds.map(med => totalMed('be',med)),
+       backgroundColor: COLORS_BE, borderWidth: 2, borderColor: '#07080f',
+       hoverOffset: 8 }],
+    { noScales: true, legend: true }
+  );
+  // PUSH por med
+  mkChart('ov-push-med', 'doughnut',
+    DATA.push.meds,
+    [{ data: DATA.push.meds.map(med => totalMed('push',med)),
+       backgroundColor: COLORS_PUSH, borderWidth: 2, borderColor: '#07080f',
+       hoverOffset: 8 }],
+    { noScales: true, legend: true }
+  );
+
+  // Table
+  const tbody = document.getElementById('overview-tbody');
+  let html = '';
+  DATA.be.meds.forEach(med => {
+    const tot = totalMed('be', med);
+    html += `<tr>
+      <td><span class="month-pill" style="background:rgba(0,229,255,.1);color:var(--cyan)">BE</span></td>
+      <td class="med-name">${med}</td>
+      <td class="num">${DATA.be.vals[med]?.['Marzo']||0}</td>
+      <td class="num">${DATA.be.vals[med]?.['Abril']||0}</td>
+      <td class="num">${DATA.be.vals[med]?.['Mayo']||0}</td>
+      <td class="num">${tot}</td>
+    </tr>`;
   });
+  html += `<tr class="total-row">
+    <td></td><td class="med-name" style="font-weight:700;color:var(--gold)">TOTAL BE</td>
+    <td class="num total-row">${totalMes('be','Marzo')}</td>
+    <td class="num total-row">${totalMes('be','Abril')}</td>
+    <td class="num total-row">${totalMes('be','Mayo')}</td>
+    <td class="num total-row">${grandTotal('be')}</td>
+  </tr>`;
+  DATA.push.meds.forEach(med => {
+    const tot = totalMed('push', med);
+    html += `<tr>
+      <td><span class="month-pill" style="background:rgba(255,45,120,.1);color:var(--pink)">PUSH</span></td>
+      <td class="med-name">${med}</td>
+      <td class="num pink">${DATA.push.vals[med]?.['Marzo']||0}</td>
+      <td class="num pink">${DATA.push.vals[med]?.['Abril']||0}</td>
+      <td class="num pink">${DATA.push.vals[med]?.['Mayo']||0}</td>
+      <td class="num pink">${tot}</td>
+    </tr>`;
+  });
+  html += `<tr class="total-row">
+    <td></td><td class="med-name" style="font-weight:700;color:var(--gold)">TOTAL PUSH</td>
+    <td class="num total-row">${totalMes('push','Marzo')}</td>
+    <td class="num total-row">${totalMes('push','Abril')}</td>
+    <td class="num total-row">${totalMes('push','Mayo')}</td>
+    <td class="num total-row">${grandTotal('push')}</td>
+  </tr>`;
+  tbody.innerHTML = html;
 }
 
-// ===================== STEP 4: EXTRACT =====================
-async function extractData() {
-  const fmt = FORMATS[selectedFormat];
-  document.getElementById('progressArea').style.display = 'block';
-  document.getElementById('reviewFields').innerHTML = '';
-  document.getElementById('previewArea').style.display = 'none';
-  extractedData = {}; currentMeds = []; currentLabs = [];
+// ════ BOMBA ELASTOMÉRICA ════
+let beMesActual = 'Todos';
+function setBeMes(mes) {
+  beMesActual = mes;
+  document.querySelectorAll('.be-msels').forEach(b => {
+    b.style.borderColor = b.textContent.trim() === mes ? 'var(--cyan)' : '';
+    b.style.color = b.textContent.trim() === mes ? 'var(--cyan)' : '';
+    b.style.background = b.textContent.trim() === mes ? 'rgba(0,229,255,.1)' : '';
+  });
+  renderBE(mes);
+}
 
-  let allImages = [];
-  Object.values(assignedImages).forEach(idxArr => { idxArr.forEach(i => { if (!allImages.includes(i)) allImages.push(i); }); });
-  if (allImages.length === 0) allImages = extractedImages.map((_, i) => i);
+function renderBE(mes) {
+  const meses = DATA.be.meses;
+  const meds = DATA.be.meds;
+  const colors = COLORS_BE;
 
-  setProgress(10, 'Preparando imágenes...');
-  const imagePayloads = allImages.map(i => ({
-    type: 'image',
-    source: { type: 'base64', media_type: extractedImages[i].mime || 'image/png', data: extractedImages[i].base64 }
+  // KPIs
+  const kpiEl = document.getElementById('be-kpis');
+  const clsArr = ['c1','c2','c3','c4','c5'];
+  let khtml = '';
+  meds.forEach((med, i) => {
+    const val = mes === 'Todos' ? totalMed('be', med) : (DATA.be.vals[med]?.[mes] || 0);
+    khtml += `<div class="kpi ${clsArr[i%clsArr.length]} anim" style="animation-delay:${i*0.05}s">
+      <div class="kpi-label">${med}</div>
+      <div class="kpi-val">${val}</div>
+      <div class="kpi-sub">pacientes únicos</div>
+    </div>`;
+  });
+  const totVal = mes === 'Todos' ? grandTotal('be') : totalMes('be', mes);
+  khtml += `<div class="kpi total anim" style="animation-delay:${meds.length*0.05}s">
+    <div class="kpi-label">TOTAL BE</div>
+    <div class="kpi-val">${totVal}</div>
+    <div class="kpi-sub">pacientes únicos</div>
+  </div>`;
+  kpiEl.innerHTML = khtml;
+
+  // Chart 1: por medicamento
+  const vals1 = mes === 'Todos'
+    ? meds.map(med => totalMed('be', med))
+    : meds.map(med => DATA.be.vals[med]?.[mes] || 0);
+  document.getElementById('be-chart1-sub').textContent = mes === 'Todos' ? 'Todos los meses' : mes;
+  mkChart('be-chart1', 'bar', meds,
+    [{ data: vals1, backgroundColor: colors, borderRadius: 8, borderSkipped: false }]
+  );
+
+  // Chart 2: evolución mensual
+  const datasets2 = meds.map((med, i) => ({
+    label: med,
+    data: meses.map(m => DATA.be.vals[med]?.[m] || 0),
+    borderColor: colors[i], backgroundColor: colors[i]+'22',
+    tension: 0.4, pointRadius: 4, pointHoverRadius: 7, borderWidth: 2, fill: true
   }));
+  mkChart('be-chart2', 'line', meses, datasets2, { legend: true });
 
-  const systemPrompt = buildPrompt(fmt);
-  setProgress(25, 'Enviando a IA...');
+  // Badge
+  document.getElementById('be-mes-badge').textContent = mes === 'Todos' ? 'Todos los meses' : mes;
 
-  try {
-    const response = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: [
-            ...imagePayloads,
-            { type: 'text', text: 'Extrae los datos de estas imágenes médicas. Responde ÚNICAMENTE con el JSON solicitado, sin texto adicional ni backticks.' }
-          ]
-        }]
-      })
-    });
-
-    setProgress(70, 'Procesando respuesta...');
-    const data = await response.json();
-    console.log('API response:', JSON.stringify(data).substring(0, 500));
-
-    if (data.error) throw new Error('API Error: ' + (data.error.message || JSON.stringify(data.error)));
-
-    let rawText = '';
-    if (data.content && Array.isArray(data.content)) {
-      rawText = data.content.map(c => c.text || '').join('');
-    } else { rawText = '{}'; }
-
-    const clean = rawText.replace(/```json|```/g, '').trim();
-    let parsed;
-    try { parsed = JSON.parse(clean); } catch(e) { console.error('Parse error:', clean); parsed = {}; }
-
-    extractedData = parsed;
-    currentMeds = parsed.medicamentos || [];
-    currentLabs = parsed.laboratorios || [];
-
-    setProgress(90, 'Renderizando formulario...');
-    renderReviewForm(fmt, parsed);
-    setProgress(100, '¡Listo!');
-    setTimeout(() => { document.getElementById('progressArea').style.display = 'none'; }, 600);
-    renderPreview();
-  } catch (err) {
-    setProgress(100, 'Error: ' + err.message);
-    console.error(err);
-    renderReviewForm(fmt, {});
-  }
+  // Table
+  const maxTotal = Math.max(...meds.map(med => totalMed('be',med)));
+  let thtml = '';
+  meds.forEach((med, i) => {
+    const mar = DATA.be.vals[med]?.['Marzo'] || 0;
+    const abr = DATA.be.vals[med]?.['Abril'] || 0;
+    const may = DATA.be.vals[med]?.['Mayo'] || 0;
+    const tot = mar + abr + may;
+    const bw = maxTotal > 0 ? Math.round((tot/maxTotal)*100) : 0;
+    thtml += `<tr>
+      <td class="med-name">${med}</td>
+      <td class="num">${mar}</td><td class="num">${abr}</td><td class="num">${may}</td>
+      <td class="num">${tot}</td>
+      <td><div class="trend-bar-wrap">
+        <div class="trend-bar" style="width:${bw}px;background:${colors[i]}"></div>
+        <span class="trend-val">${tot}</span>
+      </div></td>
+    </tr>`;
+  });
+  thtml += `<tr class="total-row">
+    <td class="med-name" style="color:var(--gold);font-weight:700">TOTAL</td>
+    <td class="num total-row">${totalMes('be','Marzo')}</td>
+    <td class="num total-row">${totalMes('be','Abril')}</td>
+    <td class="num total-row">${totalMes('be','Mayo')}</td>
+    <td class="num total-row">${grandTotal('be')}</td>
+    <td></td>
+  </tr>`;
+  document.getElementById('be-tbody').innerHTML = thtml;
 }
 
-function buildPrompt(fmt) {
-  const base = `Eres un asistente especializado en extracción de datos de documentos médicos colombianos.
+// ════ PUSH ════
+let pushMesActual = 'Todos';
+function setPushMes(mes) {
+  pushMesActual = mes;
+  document.querySelectorAll('.push-msels').forEach(b => {
+    b.style.borderColor = b.textContent.trim() === mes ? 'var(--pink)' : '';
+    b.style.color = b.textContent.trim() === mes ? 'var(--pink)' : '';
+    b.style.background = b.textContent.trim() === mes ? 'rgba(255,45,120,.1)' : '';
+  });
+  renderPUSH(mes);
+}
 
-REGLAS CRÍTICAS:
-1. "nombre_paciente" → SOLO del campo "Paciente:" o "Nombre del paciente:" o "Nombre Paciente:". NUNCA del cuidador.
-2. "identificacion_paciente" → SOLO del campo "Identificación Paciente:" o "No. Identificación Paciente:". NUNCA del cuidador.
-3. "afiliacion" → del campo "Afiliación:", puede ser: POS, PÓLIZA, ARL, SOAT, CONTRIBUTIVO, SUBSIDIADO, etc.
-4. IGNORA COMPLETAMENTE campos como: "Nombre del cuidador", "Cuidador", "Representante", "Responsable", "Acompañante", "Familiar".
-5. Los formularios tienen campos flotantes (etiqueta arriba, valor abajo) y tablas (encabezado arriba, dato abajo). Lee ambos.
-6. Si un campo no está visible, devuelve cadena vacía "".
-7. NUNCA inventes datos.`;
+function renderPUSH(mes) {
+  const meses = DATA.push.meses;
+  const meds = DATA.push.meds;
+  const colors = COLORS_PUSH;
 
-  if (fmt.isControl) {
-    return base + `
+  const kpiEl = document.getElementById('push-kpis');
+  const clsArr = ['c2','c4','c3','c1','c5','c6'];
+  let khtml = '';
+  meds.forEach((med, i) => {
+    const val = mes === 'Todos' ? totalMed('push', med) : (DATA.push.vals[med]?.[mes] || 0);
+    khtml += `<div class="kpi ${clsArr[i%clsArr.length]} anim" style="animation-delay:${i*0.05}s">
+      <div class="kpi-label">${med}</div>
+      <div class="kpi-val">${val}</div>
+      <div class="kpi-sub">pacientes únicos</div>
+    </div>`;
+  });
+  const totVal = mes === 'Todos' ? grandTotal('push') : totalMes('push', mes);
+  khtml += `<div class="kpi total anim">
+    <div class="kpi-label">TOTAL PUSH</div>
+    <div class="kpi-val">${totVal}</div>
+    <div class="kpi-sub">pacientes únicos</div>
+  </div>`;
+  kpiEl.innerHTML = khtml;
 
-FORMATO: FÓRMULAS DE CONTROL
-Este documento es una tabla donde CADA FILA es un paciente diferente con su propio medicamento.
-Debes retornar el array "medicamentos" con UNA entrada por cada fila de la tabla.
-CADA entrada debe tener los datos del paciente DE ESA FILA específica.
-El campo "medicamento_dosis_turno" debe contener el texto completo de la celda de medicamento incluyendo dosis, pero SIN el código T1/T2/T3.
-El código T1, T2 o T3 va en el campo "turno".
-NUNCA repitas el mismo paciente en todas las filas.
+  const vals1 = mes === 'Todos'
+    ? meds.map(med => totalMed('push', med))
+    : meds.map(med => DATA.push.vals[med]?.[mes] || 0);
+  document.getElementById('push-chart1-sub').textContent = mes === 'Todos' ? 'Todos los meses' : mes;
+  mkChart('push-chart1', 'bar', meds,
+    [{ data: vals1, backgroundColor: colors, borderRadius: 8, borderSkipped: false }]
+  );
 
-Devuelve ÚNICAMENTE este JSON:
-{
-  "medicamentos": [
-    {
-      "nombre_paciente": "nombre del paciente de esta fila",
-      "identificacion_paciente": "identificacion del paciente de esta fila",
-      "afiliacion": "afiliacion del paciente de esta fila",
-      "medicamento_dosis_turno": "medicamento y dosis sin el codigo de turno",
-      "turno": "T1 o T2 o T3 si aparece, sino vacio",
-      "cantidad_be": "1 BE"
+  const datasets2 = meds.map((med, i) => ({
+    label: med,
+    data: meses.map(m => DATA.push.vals[med]?.[m] || 0),
+    borderColor: colors[i], backgroundColor: colors[i]+'22',
+    tension: 0.4, pointRadius: 4, pointHoverRadius: 7, borderWidth: 2, fill: true
+  }));
+  mkChart('push-chart2', 'line', meses, datasets2, { legend: true });
+
+  document.getElementById('push-mes-badge').textContent = mes === 'Todos' ? 'Todos los meses' : mes;
+
+  const maxTotal = Math.max(...meds.map(med => totalMed('push',med)));
+  let thtml = '';
+  meds.forEach((med, i) => {
+    const mar = DATA.push.vals[med]?.['Marzo'] || 0;
+    const abr = DATA.push.vals[med]?.['Abril'] || 0;
+    const may = DATA.push.vals[med]?.['Mayo'] || 0;
+    const tot = mar + abr + may;
+    const bw = maxTotal > 0 ? Math.round((tot/maxTotal)*100) : 0;
+    thtml += `<tr>
+      <td class="med-name">${med}</td>
+      <td class="num pink">${mar}</td><td class="num pink">${abr}</td><td class="num pink">${may}</td>
+      <td class="num pink">${tot}</td>
+      <td><div class="trend-bar-wrap">
+        <div class="trend-bar" style="width:${bw}px;background:${colors[i]}"></div>
+        <span class="trend-val">${tot}</span>
+      </div></td>
+    </tr>`;
+  });
+  thtml += `<tr class="total-row">
+    <td class="med-name" style="color:var(--gold);font-weight:700">TOTAL</td>
+    <td class="num total-row">${totalMes('push','Marzo')}</td>
+    <td class="num total-row">${totalMes('push','Abril')}</td>
+    <td class="num total-row">${totalMes('push','Mayo')}</td>
+    <td class="num total-row">${grandTotal('push')}</td>
+    <td></td>
+  </tr>`;
+  document.getElementById('push-tbody').innerHTML = thtml;
+}
+
+// ════ ADD DATA ════
+const MED_OPTIONS = {
+  be: ['Aztreonam','Clindamicina','Cefazolina','Meropenem','Piperacilina Sódica'],
+  push: ['Cefalotina','Cefazolina','Ceftriaxona','Cefepime','Meropenem','Aztreonam']
+};
+document.getElementById('f-tecnica').addEventListener('change', function() {
+  const sel = document.getElementById('f-med');
+  const opts = MED_OPTIONS[this.value] || [];
+  sel.innerHTML = '<option value="">Seleccionar…</option>' + opts.map(m=>`<option>${m}</option>`).join('');
+});
+
+function addData() {
+  const tec = document.getElementById('f-tecnica').value;
+  const mes = document.getElementById('f-mes').value;
+  const med = document.getElementById('f-med').value;
+  const num = document.getElementById('f-num').value;
+
+  document.getElementById('alert-ok').style.display='none';
+  document.getElementById('alert-err').style.display='none';
+
+  if (!tec || !mes || !med || !num) {
+    document.getElementById('alert-err').style.display='block';
+    return;
+  }
+
+  const entry = { tec, mes, med, num: parseInt(num), ts: new Date().toLocaleString('es-CO') };
+  extraData.push({ tecnica: tec, mes, med, num: parseInt(num), ts: entry.ts });
+  localStorage.setItem('farmacia_extra', JSON.stringify(extraData));
+
+  // Apply to DATA
+  const d = DATA[tec];
+  if (!d.meds.includes(med)) d.meds.push(med);
+  if (!d.meses.includes(mes)) d.meses.push(mes);
+  if (!d.vals[med]) d.vals[med] = {};
+  d.vals[med][mes] = (d.vals[med][mes] || 0) + parseInt(num);
+  if (!d.totalesMes[mes]) d.totalesMes[mes] = 0;
+  d.totalesMes[mes] += parseInt(num);
+
+  document.getElementById('f-mes').value='';
+  document.getElementById('f-med').value='';
+  document.getElementById('f-num').value='';
+  document.getElementById('alert-ok').style.display='block';
+  renderHistory();
+}
+
+function renderHistory() {
+  const tbody = document.getElementById('history-tbody');
+  if (!extraData.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:2rem">Sin datos agregados aún</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = [...extraData].reverse().map(e => `
+    <tr>
+      <td><span class="month-pill" style="background:${e.tecnica==='be'?'rgba(0,229,255,.1)':'rgba(255,45,120,.1)'};color:${e.tecnica==='be'?'var(--cyan)':'var(--pink)'}">${e.tecnica==='be'?'BE':'PUSH'}</span></td>
+      <td class="med-name">${e.mes}</td>
+      <td class="med-name">${e.med}</td>
+      <td class="num">${e.num}</td>
+      <td style="color:var(--tx3);font-size:11px;font-family:'Space Mono',monospace">${e.ts||''}</td>
+    </tr>`).join('');
+}
+
+// ════ INIT ════
+renderOverview();
+
+// ══ PARTICLES ══
+(function(){
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const COLORS = ['#2b4fff','#a855f7','#ff2d78','#00c4cc','#10f075'];
+  
+  function rand(a,b){ return Math.random()*(b-a)+a; }
+  
+  class Particle {
+    constructor(){
+      this.reset();
     }
-  ]
-}`;
-  }
-
-  if (fmt.isLab) {
-    return base + `
-
-FORMATO: PROGRAMACIÓN DE LABORATORIOS
-Extrae ÚNICAMENTE los campos del formato de programación de laboratorio:
-- nombre_paciente: nombre del paciente
-- identificacion_paciente: documento de identidad
-- afiliacion: tipo de afiliación
-- direccion: dirección de atención
-- barrio: barrio
-- municipio: municipio
-- telefono: teléfono o celular del paciente
-- fecha_prestacion: fecha de programación, puede aparecer como "Fecha de la prestación:" o "Fecha de programación:"
-
-Devuelve ÚNICAMENTE este JSON:
-{
-  "nombre_paciente": "",
-  "identificacion_paciente": "",
-  "afiliacion": "",
-  "direccion": "",
-  "barrio": "",
-  "municipio": "",
-  "telefono": "",
-  "fecha_prestacion": ""
-}`;
-  }
-
-  if (fmt.hasLabs) {
-    return base + `
-
-FORMATO: SOLICITUD DE LABORATORIOS
-Extrae ÚNICAMENTE:
-- nombre_paciente, identificacion_paciente, afiliacion, muestra (tipo de muestra)
-- laboratorios: array con CADA examen en una fila separada
-
-Devuelve ÚNICAMENTE este JSON:
-{
-  "nombre_paciente": "",
-  "identificacion_paciente": "",
-  "afiliacion": "",
-  "muestra": "",
-  "laboratorios": [
-    {
-      "nombre_laboratorio": "nombre completo del examen",
-      "descripcion": "descripcion completa del examen tal como aparece",
-      "codigo": "codigo si aparece"
+    reset(){
+      this.x = rand(0, W); this.y = rand(0, H);
+      this.r = rand(1.5, 4);
+      this.vx = rand(-.4,.4); this.vy = rand(-.5,-.1);
+      this.alpha = rand(.2,.7);
+      this.color = COLORS[Math.floor(rand(0,COLORS.length))];
+      this.life = 0; this.maxLife = rand(120,280);
     }
-  ]
-}`;
-  }
-
-  if (fmt.name === 'Cambio de IPS') {
-    return base + `
-
-FORMATO: CAMBIO DE IPS
-Extrae ÚNICAMENTE: nombre_paciente, identificacion_paciente, afiliacion, ips_origen, ips_destino, medico_solicitante.
-NO extraigas fecha de nacimiento, diagnóstico, EPS ni ningún otro campo.
-
-Devuelve ÚNICAMENTE este JSON:
-{
-  "nombre_paciente": "",
-  "identificacion_paciente": "",
-  "afiliacion": "",
-  "ips_origen": "",
-  "ips_destino": "",
-  "medico_solicitante": ""
-}`;
-  }
-
-  if (fmt.hasMeds) {
-    const isDom = fmt.name === 'Fórmulas domicilio';
-    const extraFields = isDom ? `"direccion": "", "telefono": "", "barrio": "", "ciudad": "",` : '';
-    return base + `
-
-FORMATO: ${fmt.name}
-Extrae ÚNICAMENTE: nombre_paciente, identificacion_paciente, afiliacion${isDom ? ', direccion, telefono, barrio, ciudad' : ''} y medicamentos.
-NO extraigas: fecha de nacimiento, diagnóstico, EPS, médico tratante, ni ningún otro campo.
-Para cada medicamento extrae: medicamento, dosis, frecuencia, cantidad, via.
-NO incluyas duración, NO incluyas campos extra.
-
-Devuelve ÚNICAMENTE este JSON:
-{
-  "nombre_paciente": "",
-  "identificacion_paciente": "",
-  "afiliacion": "",
-  ${extraFields}
-  "medicamentos": [
-    {
-      "medicamento": "nombre del medicamento",
-      "dosis": "dosis y unidad",
-      "frecuencia": "frecuencia de administracion",
-      "cantidad": "cantidad a dispensar",
-      "via": "via de administracion"
+    update(){
+      this.x += this.vx; this.y += this.vy;
+      this.life++;
+      if(this.life > this.maxLife || this.y < -10) this.reset();
     }
-  ]
-}`;
-  }
-
-  return base + `\n\nDevuelve ÚNICAMENTE un JSON con los campos disponibles en la imagen.`;
-}
-
-function setProgress(pct, msg) {
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('statusMsg').textContent = msg;
-}
-
-// ===================== RENDER REVIEW FORM =====================
-function renderReviewForm(fmt, data) {
-  const container = document.getElementById('reviewFields');
-  container.innerHTML = '';
-
-  // For formulas_control, fields are embedded per med row — show only quien_genera
-  const sections = {};
-  fmt.fields.forEach(f => {
-    if (!sections[f.section]) sections[f.section] = [];
-    sections[f.section].push(f);
-  });
-
-  Object.entries(sections).forEach(([sec, fields]) => {
-    const secDiv = document.createElement('div');
-    secDiv.className = 'section-assign'; secDiv.style.marginBottom = '16px';
-    secDiv.innerHTML = `<div class="sec-header">${sec}</div><div class="sec-body"><div class="fields-grid" id="fg_${sec.replace(/\s/g,'_')}"></div></div>`;
-    container.appendChild(secDiv);
-    const grid = secDiv.querySelector('.fields-grid');
-    fields.forEach(f => {
-      const val = data[f.key] || '';
-      const div = document.createElement('div'); div.className = 'field-item';
-      const badge = f.type === 'ai' ? '<span class="badge badge-ai">IA</span>' : '<span class="badge badge-manual">Manual</span>';
-      const cls = f.type === 'ai' && val ? 'ai-filled' : f.type === 'manual' ? 'manual' : 'manual';
-      div.innerHTML = `<label>${f.label}${badge}</label><input type="text" class="${cls}" id="field_${f.key}" value="${escHtml(val)}" placeholder="${f.type === 'manual' ? 'Completar manualmente' : 'No extraído'}" />`;
-      grid.appendChild(div);
-    });
-  });
-
-  if (fmt.hasMeds) {
-    const medsDiv = document.createElement('div');
-    medsDiv.className = 'section-assign'; medsDiv.style.marginBottom = '16px';
-    medsDiv.innerHTML = `<div class="sec-header">Medicamentos <span class="badge badge-ai">IA</span></div><div class="sec-body" id="medsContainer"></div>`;
-    container.appendChild(medsDiv);
-    renderMedsRows(data.medicamentos || [], fmt);
-  }
-
-  if (fmt.hasLabs) {
-    const labsDiv = document.createElement('div');
-    labsDiv.className = 'section-assign'; labsDiv.style.marginBottom = '16px';
-    labsDiv.innerHTML = `<div class="sec-header">Laboratorios <span class="badge badge-ai">IA</span></div><div class="sec-body" id="labsContainer"></div>`;
-    container.appendChild(labsDiv);
-    renderLabsRows(data.laboratorios || []);
-  }
-}
-
-function renderMedsRows(meds, fmt) {
-  const container = document.getElementById('medsContainer');
-  if (!container) return;
-  container.innerHTML = '';
-  currentMeds = meds.length > 0 ? [...meds] : [{}];
-
-  currentMeds.forEach((med, idx) => {
-    const row = document.createElement('div');
-    row.className = 'med-row'; row.id = 'med_row_' + idx;
-
-    if (fmt.isControl) {
-      const mdVal = med.medicamento_dosis_turno || [med.medicamento, med.dosis].filter(Boolean).join(' ') || '';
-      const turnoVal = med.turno || '';
-      const nomVal = med.nombre_paciente || '';
-      const idVal = med.identificacion_paciente || '';
-      const afilVal = med.afiliacion || '';
-      row.innerHTML = `<button class="remove-btn" onclick="removeMed(${idx})">×</button>
-        <div class="med-row-fields" style="grid-template-columns:2fr 1fr 1fr;margin-bottom:6px">
-          <div class="field-item"><label>Nombre Paciente <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_nombre_${idx}" value="${escHtml(nomVal)}" /></div>
-          <div class="field-item"><label>Identificación <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_idpac_${idx}" value="${escHtml(idVal)}" /></div>
-          <div class="field-item"><label>Afiliación <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_afil_${idx}" value="${escHtml(afilVal)}" /></div>
-        </div>
-        <div class="med-row-fields" style="grid-template-columns:3fr 1fr 1fr">
-          <div class="field-item"><label>Medicamento y Dosis <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_mddosis_${idx}" value="${escHtml(mdVal)}" /></div>
-          <div class="field-item"><label>Turno <span class="badge badge-ai">IA</span></label><input type="text" class="ai-filled" id="med_turno_${idx}" value="${escHtml(turnoVal)}" placeholder="T1, T2, T3..." /></div>
-          <div class="field-item"><label>Cantidad</label><input type="text" class="auto" id="med_cbe_${idx}" value="1 BE" readonly /></div>
-        </div>`;
-    } else {
-      row.innerHTML = `<button class="remove-btn" onclick="removeMed(${idx})">×</button>
-        <div class="med-row-fields">
-          <div class="field-item"><label>Medicamento</label><input type="text" class="ai-filled" id="med_med_${idx}" value="${escHtml(med.medicamento||'')}" /></div>
-          <div class="field-item"><label>Dosis</label><input type="text" class="ai-filled" id="med_dos_${idx}" value="${escHtml(med.dosis||'')}" /></div>
-          <div class="field-item"><label>Frecuencia</label><input type="text" class="ai-filled" id="med_frec_${idx}" value="${escHtml(med.frecuencia||'')}" /></div>
-          <div class="field-item"><label>Cantidad</label><input type="text" class="ai-filled" id="med_cant_${idx}" value="${escHtml(med.cantidad||'')}" /></div>
-          <div class="field-item"><label>Vía</label><input type="text" class="ai-filled" id="med_via_${idx}" value="${escHtml(med.via||'')}" /></div>
-        </div>`;
+    draw(){
+      const fade = Math.min(this.life/20, 1) * Math.min((this.maxLife-this.life)/20, 1);
+      ctx.save();
+      ctx.globalAlpha = this.alpha * fade;
+      ctx.fillStyle = this.color;
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
     }
-    container.appendChild(row);
-  });
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'add-btn'; addBtn.textContent = '+ Agregar medicamento';
-  addBtn.onclick = () => { currentMeds.push({}); renderMedsRows(currentMeds, fmt); };
-  container.appendChild(addBtn);
-}
-
-function removeMed(idx) { currentMeds.splice(idx, 1); renderMedsRows(currentMeds, FORMATS[selectedFormat]); }
-
-function renderLabsRows(labs) {
-  const container = document.getElementById('labsContainer');
-  if (!container) return;
-  container.innerHTML = '';
-  currentLabs = labs.length > 0 ? [...labs] : [{}];
-  currentLabs.forEach((lab, idx) => {
-    const row = document.createElement('div'); row.className = 'lab-row'; row.id = 'lab_row_' + idx;
-    row.innerHTML = `<button class="remove-btn" onclick="removeLab(${idx})">×</button>
-      <div class="lab-row-fields">
-        <div class="field-item"><label>Laboratorio</label><input type="text" class="ai-filled" id="lab_nom_${idx}" value="${escHtml(lab.nombre_laboratorio||lab.nombre||'')}" /></div>
-        <div class="field-item"><label>Descripción</label><input type="text" class="ai-filled" id="lab_desc_${idx}" value="${escHtml(lab.descripcion||'')}" /></div>
-      </div>`;
-    container.appendChild(row);
-  });
-  const addBtn = document.createElement('button');
-  addBtn.className = 'add-btn'; addBtn.textContent = '+ Agregar laboratorio';
-  addBtn.onclick = () => { currentLabs.push({}); renderLabsRows(currentLabs); };
-  container.appendChild(addBtn);
-}
-
-function removeLab(idx) { currentLabs.splice(idx, 1); renderLabsRows(currentLabs); }
-
-function collectFormData() {
-  const fmt = FORMATS[selectedFormat];
-  const result = {};
-  fmt.fields.forEach(f => { const el = document.getElementById('field_' + f.key); if (el) result[f.key] = el.value; });
-
-  if (fmt.hasMeds) {
-    const meds = [];
-    currentMeds.forEach((_, idx) => {
-      if (fmt.isControl) {
-        if (!document.getElementById('med_mddosis_' + idx)) return;
-        meds.push({
-          nombre_paciente: document.getElementById('med_nombre_' + idx)?.value || '',
-          identificacion_paciente: document.getElementById('med_idpac_' + idx)?.value || '',
-          afiliacion: document.getElementById('med_afil_' + idx)?.value || '',
-          medicamento_dosis_turno: document.getElementById('med_mddosis_' + idx)?.value || '',
-          turno: document.getElementById('med_turno_' + idx)?.value || '',
-          cantidad_be: document.getElementById('med_cbe_' + idx)?.value || '1 BE',
-        });
-      } else {
-        if (!document.getElementById('med_med_' + idx)) return;
-        meds.push({
-          medicamento: document.getElementById('med_med_' + idx)?.value || '',
-          dosis: document.getElementById('med_dos_' + idx)?.value || '',
-          frecuencia: document.getElementById('med_frec_' + idx)?.value || '',
-          cantidad: document.getElementById('med_cant_' + idx)?.value || '',
-          via: document.getElementById('med_via_' + idx)?.value || '',
-        });
-      }
-    });
-    result.medicamentos = meds;
   }
 
-  if (fmt.hasLabs) {
-    const labs = [];
-    currentLabs.forEach((_, idx) => {
-      if (!document.getElementById('lab_nom_' + idx)) return;
-      labs.push({
-        nombre_laboratorio: document.getElementById('lab_nom_' + idx)?.value || '',
-        descripcion: document.getElementById('lab_desc_' + idx)?.value || '',
-      });
-    });
-    result.laboratorios = labs;
+  for(let i=0;i<60;i++) particles.push(new Particle());
+
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{ p.update(); p.draw(); });
+    requestAnimationFrame(loop);
   }
-  return result;
-}
-
-function renderPreview() {
-  const data = collectFormData();
-  const fmt = FORMATS[selectedFormat];
-  const table = document.getElementById('previewTable');
-  table.innerHTML = '';
-  document.getElementById('previewArea').style.display = 'block';
-
-  if (fmt.isControl && data.medicamentos && data.medicamentos.length > 0) {
-    const hdrs = ['Nombre Paciente','Identificación','Afiliación','Medicamento y Dosis','Turno','Cantidad','Quien genera'];
-    const tr = document.createElement('tr');
-    hdrs.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
-    table.appendChild(tr);
-    data.medicamentos.forEach(med => {
-      const row = document.createElement('tr');
-      [med.nombre_paciente, med.identificacion_paciente, med.afiliacion, med.medicamento_dosis_turno, med.turno, med.cantidad_be, data.quien_genera].forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
-      table.appendChild(row);
-    });
-  } else if (fmt.hasMeds && data.medicamentos && data.medicamentos.length > 0) {
-    const hdrs = ['Nombre Paciente','Identificación','Afiliación','Medicamento','Dosis','Frecuencia','Cantidad','Vía','Quien genera'];
-    const tr = document.createElement('tr');
-    hdrs.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
-    table.appendChild(tr);
-    data.medicamentos.forEach(med => {
-      const row = document.createElement('tr');
-      [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, med.medicamento, med.dosis, med.frecuencia, med.cantidad, med.via, data.quien_genera].forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
-      table.appendChild(row);
-    });
-  } else if (fmt.hasLabs && data.laboratorios && data.laboratorios.length > 0) {
-    const hdrs = ['Nombre Paciente','Identificación','Afiliación','Muestra','Laboratorio','Descripción','Quien genera'];
-    const tr = document.createElement('tr');
-    hdrs.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
-    table.appendChild(tr);
-    data.laboratorios.forEach(lab => {
-      const row = document.createElement('tr');
-      [data.nombre_paciente, data.identificacion_paciente, data.afiliacion, data.muestra, lab.nombre_laboratorio, lab.descripcion, data.quien_genera].forEach(v => { const td = document.createElement('td'); td.textContent = v||''; row.appendChild(td); });
-      table.appendChild(row);
-    });
-  } else {
-    const relevantFields = fmt.fields.slice(0, 8);
-    const tr = document.createElement('tr');
-    relevantFields.forEach(f => { const th = document.createElement('th'); th.textContent = f.label; tr.appendChild(th); });
-    table.appendChild(tr);
-    const row = document.createElement('tr');
-    relevantFields.forEach(f => { const td = document.createElement('td'); td.textContent = data[f.key]||''; row.appendChild(td); });
-    table.appendChild(row);
-  }
-}
-
-// ===================== GENERATE EXCEL =====================
-function generateExcel() {
-  try {
-    const data = collectFormData();
-    const fmt = FORMATS[selectedFormat];
-
-    let headers, rows, title;
-
-    if (fmt.isControl) {
-      title = fmt.name;
-      headers = ['Nombre Paciente','Identificación Paciente','Afiliación','Medicamento y Dosis','Turno','Cantidad','Quien genera'];
-      rows = (data.medicamentos||[]).map(m => [
-        m.nombre_paciente||'', m.identificacion_paciente||'', m.afiliacion||'',
-        m.medicamento_dosis_turno||'', m.turno||'', m.cantidad_be||'1 BE', data.quien_genera||''
-      ]);
-    } else if (fmt.hasMeds) {
-      title = fmt.name;
-      headers = ['Nombre Paciente','Identificación Paciente','Afiliación','Medicamento','Dosis','Frecuencia','Cantidad','Vía','Quien genera'];
-      rows = (data.medicamentos||[]).map(m => [
-        data.nombre_paciente||'', data.identificacion_paciente||'', data.afiliacion||'',
-        m.medicamento||'', m.dosis||'', m.frecuencia||'', m.cantidad||'', m.via||'', data.quien_genera||''
-      ]);
-    } else if (fmt.hasLabs) {
-      title = fmt.name;
-      headers = ['Nombre Paciente','Identificación Paciente','Afiliación','Tipo de muestra','Laboratorio','Descripción','Quien genera'];
-      rows = (data.laboratorios||[]).map(l => [
-        data.nombre_paciente||'', data.identificacion_paciente||'', data.afiliacion||'',
-        data.muestra||'', l.nombre_laboratorio||'', l.descripcion||'', data.quien_genera||''
-      ]);
-    } else if (fmt.isLab) {
-      // Programación laboratorio — tabla especial
-      downloadLabProgramExcel(data, fmt);
-      return;
-    } else {
-      title = fmt.name;
-      headers = fmt.fields.map(f => f.label);
-      rows = [fmt.fields.map(f => data[f.key]||'')];
-    }
-
-    downloadStyledExcel(title, headers, rows);
-    goStep(5);
-  } catch(err) {
-    alert('Error generando Excel: ' + err.message);
-    console.error(err);
-  }
-}
-
-function downloadStyledExcel(title, headers, rows) {
-  // SpreadsheetML XML — true .xlsx compatible, no Excel warning
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
-<Styles>
-  <Style ss:ID="title">
-    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
-    <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="14"/>
-    <Interior ss:Color="#1A56DB" ss:Pattern="Solid"/>
-  </Style>
-  <Style ss:ID="header">
-    <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-    <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
-    <Interior ss:Color="#1A56DB" ss:Pattern="Solid"/>
-    <Borders>
-      <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
-    </Borders>
-  </Style>
-  <Style ss:ID="data">
-    <Alignment ss:Vertical="Center" ss:WrapText="1"/>
-    <Borders>
-      <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
-      <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
-      <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
-      <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#AAAAAA"/>
-    </Borders>
-  </Style>
-  <Style ss:ID="lbl">
-    <Alignment ss:Horizontal="Right" ss:Vertical="Center" ss:WrapText="1"/>
-    <Font ss:Bold="1" ss:Color="#1B3A6B"/>
-    <Interior ss:Color="#D6E4FF" ss:Pattern="Solid"/>
-    <Borders>
-      <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
-    </Borders>
-  </Style>
-</Styles>
-<Worksheet ss:Name="${escXml(title).substring(0,31)}">
-<Table>`;
-
-  // Title row — merged across all cols
-  xml += `<Row ss:Height="28"><Cell ss:MergeAcross="${headers.length-1}" ss:StyleID="title"><Data ss:Type="String">${escXml(title)}</Data></Cell></Row>`;
-
-  // Header row
-  xml += '<Row ss:Height="20">';
-  headers.forEach(h => { xml += `<Cell ss:StyleID="header"><Data ss:Type="String">${escXml(h)}</Data></Cell>`; });
-  xml += '</Row>';
-
-  // Data rows
-  rows.forEach(row => {
-    xml += '<Row ss:Height="18">';
-    row.forEach(v => { xml += `<Cell ss:StyleID="data"><Data ss:Type="String">${escXml(String(v||''))}</Data></Cell>`; });
-    xml += '</Row>';
-  });
-
-  xml += '</Table></Worksheet></Workbook>';
-
-  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  triggerDownload(blob, title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.xls');
-}
-
-function downloadLabProgramExcel(data, fmt) {
-  function row2(l1, v1, l2, v2) {
-    return `<Row ss:Height="20">
-      <Cell ss:StyleID="lbl"><Data ss:Type="String">${escXml(l1)}</Data></Cell>
-      <Cell ss:StyleID="data"><Data ss:Type="String">${escXml(v1||'')}</Data></Cell>
-      <Cell ss:StyleID="lbl"><Data ss:Type="String">${escXml(l2)}</Data></Cell>
-      <Cell ss:StyleID="data"><Data ss:Type="String">${escXml(v2||'')}</Data></Cell>
-    </Row>`;
-  }
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
-<Styles>
-  <Style ss:ID="title"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
-    <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="13"/>
-    <Interior ss:Color="#1A56DB" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="lbl"><Alignment ss:Horizontal="Right" ss:Vertical="Center" ss:WrapText="1"/>
-    <Font ss:Bold="1" ss:Color="#1B3A6B"/>
-    <Interior ss:Color="#D6E4FF" ss:Pattern="Solid"/>
-    <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
-    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
-    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
-    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
-  <Style ss:ID="data"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/>
-    <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/>
-    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/>
-    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/>
-    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#888888"/></Borders></Style>
-</Styles>
-<Worksheet ss:Name="Programacion laboratorio">
-<Table ss:DefaultColumnWidth="120">
-  <Row ss:Height="26"><Cell ss:MergeAcross="3" ss:StyleID="title"><Data ss:Type="String">Programación de laboratorio</Data></Cell></Row>
-  ${row2('Nombre paciente:', data.nombre_paciente, 'Teléfono / Celular 1 / Celular 2:', data.telefono)}
-  ${row2('Documento Identidad:', data.identificacion_paciente, 'Afiliación:', data.afiliacion)}
-  ${row2('Dirección atención:', data.direccion, 'Fecha de programación:', data.fecha_prestacion)}
-  ${row2('Barrio:', data.barrio, 'Quien programa:', data.quien_programa)}
-  <Row ss:Height="18">
-    <Cell ss:StyleID="lbl"><Data ss:Type="String">Municipio:</Data></Cell>
-    <Cell ss:StyleID="data"><Data ss:Type="String">${escXml(data.municipio||'')}</Data></Cell>
-    <Cell><Data ss:Type="String"></Data></Cell>
-    <Cell><Data ss:Type="String"></Data></Cell>
-  </Row>
-</Table></Worksheet></Workbook>`;
-
-  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  triggerDownload(blob, 'Programacion_Laboratorio_' + new Date().toISOString().slice(0,10) + '.xls');
-  goStep(5);
-}
-
-function triggerDownload(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-}
-
-function escXml(str) {
-  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
-}
-
-// Override goStep to hook renderAssignStep
-(function() {
-  var orig = goStep;
-  window.goStep = function(n) {
-    if (n === 3) renderAssignStep();
-    orig(n);
-  };
-  document.addEventListener('DOMContentLoaded', function() {
-    renderFormatCards();
-  });
-  // Also render immediately in case DOM already loaded
-  if (document.readyState !== 'loading') renderFormatCards();
+  loop();
 })();
 
+// ══ COUNT-UP ANIMATION ══
+function countUp(el, target, duration=800){
+  const start = 0;
+  const startTime = performance.now();
+  function step(now){
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed/duration, 1);
+    const ease = 1 - Math.pow(1-progress, 3);
+    el.textContent = Math.round(start + (target-start)*ease);
+    if(progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Patch renderBE and renderPUSH to trigger count-up on KPI vals
+const _origRenderBE = renderBE;
+function renderBEAnimated(mes){
+  _origRenderBE(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#be-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 600);
+    });
+  }, 50);
+}
+
+const _origRenderPUSH = renderPUSH;
+function renderPUSHAnimated(mes){
+  _origRenderPUSH(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#push-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 600);
+    });
+  }, 50);
+}
+
+// Override setBeMes and setPushMes
+const _origSetBeMes = setBeMes;
+setBeMes = function(mes){
+  _origSetBeMes(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#be-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 500);
+    });
+  }, 80);
+};
+
+const _origSetPushMes = setPushMes;
+setPushMes = function(mes){
+  _origSetPushMes(mes);
+  setTimeout(()=>{
+    document.querySelectorAll('#push-kpis .kpi-val').forEach(el=>{
+      const n = parseInt(el.textContent)||0;
+      countUp(el, n, 500);
+    });
+  }, 80);
+};
+
+// Animate big numbers on overview
+function animateOverviewNums(){
+  document.querySelectorAll('.bsc-val').forEach(el=>{
+    const n = parseInt(el.textContent)||0;
+    countUp(el, n, 1000);
+  });
+}
+setTimeout(animateOverviewNums, 300);
+
+</script>
+</body>
+</html>
