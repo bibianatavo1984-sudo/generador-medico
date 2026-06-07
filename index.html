@@ -31,6 +31,7 @@
     .format-card .icon { font-size: 2rem; margin-bottom: 8px; }
     .format-card .name { font-weight: 700; font-size: 0.9rem; color: #2d3748; margin-bottom: 4px; }
     .format-card .desc { font-size: 0.75rem; color: #718096; }
+    .format-card .icon, .format-card .name, .format-card .desc { pointer-events: none; }
     .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; transition: all 0.15s; }
     .btn-primary { background: #1a56db; color: white; }
     .btn-primary:hover { background: #1546b8; }
@@ -320,10 +321,13 @@ function selectFormat(fmt) {
   if (card) card.classList.add('selected');
   var btn = document.getElementById('btn1next');
   btn.className = 'btn btn-primary';
+  btn.style.background = '';
+  btn.style.cursor = '';
 }
 
 function selectFormat_next() {
   if (selectedFormat) goStep(2);
+  else alert('Por favor selecciona un formato primero');
 }
 
 // ===================== STEP 2: UPLOAD =====================
