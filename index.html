@@ -25,9 +25,10 @@
     h2 { font-size: 1.15rem; font-weight: 700; color: #1a365d; margin-bottom: 8px; }
     .subtitle { color: #718096; font-size: 0.88rem; margin-bottom: 22px; }
     .format-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-    .format-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 18px 14px; cursor: pointer; transition: all 0.18s; text-align: center; background: white; }
-    .format-card:hover { border-color: #1a56db; background: #ebf4ff; }
-    .format-card.selected { border-color: #1a56db; background: #ebf4ff; box-shadow: 0 0 0 3px rgba(26,86,219,0.15); }
+    .format-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 18px 14px; cursor: pointer; text-align: center; background: white; }
+    .format-card:hover { border-color: #90b8f8; background: #f0f6ff; }
+    .format-card.selected { border-color: #1a56db !important; background: #dbeafe !important; box-shadow: 0 0 0 4px rgba(26,86,219,0.25) !important; }
+    .format-card.selected .name { color: #1a56db !important; }
     .format-card .icon { font-size: 2rem; margin-bottom: 8px; }
     .format-card .name { font-weight: 700; font-size: 0.9rem; color: #2d3748; margin-bottom: 4px; }
     .format-card .desc { font-size: 0.75rem; color: #718096; }
