@@ -117,9 +117,28 @@
   <div id="step1" class="card">
     <h2>Seleccionar formato</h2>
     <p class="subtitle">Elige el tipo de documento que necesitas generar</p>
-    <div class="format-grid" id="formatGrid"></div>
+    <div class="format-grid">
+      <div class="format-card" id="card_formulas_domicilio" onclick="selectFormat('formulas_domicilio')">
+        <div class="icon">🏠</div><div class="name">Fórmulas domicilio</div><div class="desc">Paciente + dirección + medicamentos</div>
+      </div>
+      <div class="format-card" id="card_salud_casa" onclick="selectFormat('salud_casa')">
+        <div class="icon">💊</div><div class="name">Salud en casa</div><div class="desc">Paciente + medicamentos</div>
+      </div>
+      <div class="format-card" id="card_laboratorios" onclick="selectFormat('laboratorios')">
+        <div class="icon">🔬</div><div class="name">Laboratorios</div><div class="desc">Formato tabla programación</div>
+      </div>
+      <div class="format-card" id="card_cambio_ips" onclick="selectFormat('cambio_ips')">
+        <div class="icon">🔄</div><div class="name">Cambio de IPS</div><div class="desc">Paciente + IPS origen/destino</div>
+      </div>
+      <div class="format-card" id="card_solicitud_laboratorios" onclick="selectFormat('solicitud_laboratorios')">
+        <div class="icon">🧪</div><div class="name">Solicitud laboratorios</div><div class="desc">Paciente + muestra + laboratorios</div>
+      </div>
+      <div class="format-card" id="card_formulas_control" onclick="selectFormat('formulas_control')">
+        <div class="icon">📋</div><div class="name">Fórmulas de Control</div><div class="desc">Por paciente: medicamento, dosis y turno</div>
+      </div>
+    </div>
     <div class="btn-row" style="justify-content:flex-end">
-      <button class="btn btn-primary" id="btn1next" style="background:#a0aec0;cursor:default;" onclick="btnNextClick()">Siguiente →</button>
+      <button class="btn btn-secondary" id="btn1next" onclick="selectFormat_next()">Siguiente →</button>
     </div>
   </div>
 
@@ -296,13 +315,15 @@ function goStep(n) {
 
 function selectFormat(fmt) {
   selectedFormat = fmt;
-  document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
-  const card = document.querySelector('[data-fmt="' + fmt + '"]');
+  document.querySelectorAll('.format-card').forEach(function(c) { c.classList.remove('selected'); });
+  var card = document.getElementById('card_' + fmt);
   if (card) card.classList.add('selected');
-  const btn = document.getElementById('btn1next');
-  btn.classList.remove('btn-secondary');
-  btn.classList.add('btn-primary');
-  btn.onclick = function() { goStep(2); };
+  var btn = document.getElementById('btn1next');
+  btn.className = 'btn btn-primary';
+}
+
+function selectFormat_next() {
+  if (selectedFormat) goStep(2);
 }
 
 // ===================== STEP 2: UPLOAD =====================
