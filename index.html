@@ -211,6 +211,20 @@
 </div>
 
 <script>
+// Declare global functions immediately so onclick handlers can find them
+window.selectFormat = function(fmt) {
+  window._selectedFormat = fmt; window._selectedFormat = fmt;
+  document.querySelectorAll('.format-card').forEach(function(c) { c.removeAttribute('data-selected'); });
+  var card = document.getElementById('card_' + fmt);
+  if (card) card.setAttribute('data-selected','1');
+  var btn = document.getElementById('btn1next');
+  if (btn) { btn.className = 'btn btn-primary'; }
+};
+window.selectFormat_next = function() {
+  if (window._selectedFormat) { window.goStep(2); }
+  else { alert('Por favor selecciona un formato primero'); }
+};
+
 let selectedFormat = null;
 let extractedImages = [];
 let assignedImages = {};
@@ -316,7 +330,7 @@ function goStep(n) {
 }
 
 function selectFormat(fmt) {
-  selectedFormat = fmt;
+  selectedFormat = fmt; window._selectedFormat = fmt;
   document.querySelectorAll('.format-card').forEach(function(c) { c.removeAttribute('data-selected'); });
   var card = document.getElementById('card_' + fmt);
   if (card) card.setAttribute('data-selected', '1');
@@ -325,7 +339,7 @@ function selectFormat(fmt) {
 }
 
 function selectFormat_next() {
-  if (selectedFormat) goStep(2);
+  if (selectedFormat || window._selectedFormat) goStep(2);
   else alert('Por favor selecciona un formato primero');
 }
 
