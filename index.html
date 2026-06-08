@@ -1007,9 +1007,20 @@ function escXml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
 
+// Expose all functions globally
+window.selectFormat = selectFormat;
+window.selectFormat_next = selectFormat_next;
+window.goStep = goStep;
+window.handleFile = handleFile;
+window.extractData = extractData;
+window.removeMed = removeMed;
+window.removeLab = removeLab;
+window.generateExcel = generateExcel;
+window.resetAll = resetAll;
+
 // Override goStep to hook renderAssignStep
 (function() {
-  var orig = goStep;
+  var orig = window.goStep;
   window.goStep = function(n) {
     if (n === 3) renderAssignStep();
     orig(n);
