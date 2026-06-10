@@ -242,6 +242,11 @@ let extractedData = {};
 let currentMeds = [];
 let currentLabs = [];
 
+window.onerror = function(msg, src, line, col, err) {
+  console.error('JS Error at line ' + line + ': ' + msg);
+  return false;
+};
+
 // ===================== FORMATO CONFIG =====================
 const FORMATS = {
   formulas_domicilio: {
