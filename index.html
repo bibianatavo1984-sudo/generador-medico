@@ -212,29 +212,6 @@
 </div>
 
 <script>
-// Declare global functions immediately so onclick handlers can find them
-window.selectFormat = function(fmt) {
-  window._selectedFormat = fmt;
-  document.querySelectorAll('.format-card').forEach(function(c) { c.removeAttribute('data-selected'); });
-  var card = document.getElementById('card_' + fmt);
-  if (card) card.setAttribute('data-selected','1');
-  var btn = document.getElementById('btn1next');
-  if (btn) { btn.className = 'btn btn-primary'; }
-};
-window.selectFormat_next = function() {
-  if (window._selectedFormat) {
-    // Show step 2
-    for (var i=1;i<=5;i++){
-      document.getElementById('step'+i).style.display='none';
-      document.getElementById('s'+i).className='step'+(i<2?' done':i===2?' active':'');
-    }
-    document.getElementById('step2').style.display='block';
-    window.scrollTo(0,0);
-  } else {
-    alert('Por favor selecciona un formato primero');
-  }
-};
-
 let selectedFormat = null;
 let extractedImages = [];
 let assignedImages = {};
