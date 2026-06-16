@@ -162,11 +162,11 @@ var labs = [];
 
 // ===== FORMATS =====
 var FMTS = {
-  formulas_domicilio:{name:'Fórmulas domicilio',icon:'🏠',desc:'Paciente + dirección + medicamentos',sections:['Datos del paciente','Dirección y contacto','Medicamentos'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'direccion',l:'Dirección',t:'ai',s:'Dirección y contacto'},{k:'telefono',l:'Teléfono',t:'ai',s:'Dirección y contacto'},{k:'barrio',l:'Barrio',t:'ai',s:'Dirección y contacto'},{k:'ciudad',l:'Ciudad',t:'ai',s:'Dirección y contacto'},{k:'quien_genera',l:'Quien genera',t:'man',s:'Dirección y contacto'}],hasMeds:true},
+  formulas_domicilio:{name:'Fórmulas domicilio',icon:'🏠',desc:'Paciente + dirección + medicamentos',sections:['Datos del paciente','Dirección y contacto','Medicamentos'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'direccion_completa',l:'Dirección (Dir / Barrio / Municipio)',t:'ai',s:'Dirección y contacto'},{k:'telefono',l:'Teléfono',t:'ai',s:'Dirección y contacto'},{k:'quien_genera',l:'Quien genera',t:'man',s:'Dirección y contacto'}],hasMeds:true},
   salud_casa:{name:'Salud en casa',icon:'💊',desc:'Paciente + medicamentos',sections:['Datos del paciente','Medicamentos'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'quien_genera',l:'Quien genera',t:'man',s:'Datos del paciente'}],hasMeds:true},
   laboratorios:{name:'Laboratorios',icon:'🔬',desc:'Formato tabla programación',sections:['Datos del paciente','Programación'],fields:[{k:'nombre_paciente',l:'Nombre paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Documento Identidad',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'direccion',l:'Dirección atención',t:'ai',s:'Datos del paciente'},{k:'barrio',l:'Barrio',t:'ai',s:'Datos del paciente'},{k:'municipio',l:'Municipio',t:'ai',s:'Datos del paciente'},{k:'telefono',l:'Teléfono/Celular',t:'ai',s:'Datos del paciente'},{k:'fecha_prestacion',l:'Fecha de programación',t:'ai',s:'Programación'},{k:'quien_programa',l:'Quien programa',t:'man',s:'Programación'}],hasMeds:false,isLab:true},
   cambio_ips:{name:'Cambio de IPS',icon:'🔄',desc:'Paciente + IPS origen/destino',sections:['Datos del paciente','IPS'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'ips_origen',l:'IPS Origen',t:'ai',s:'IPS'},{k:'codigo_ips_origen',l:'Código IPS Origen',t:'man',s:'IPS'},{k:'ips_destino',l:'IPS Destino',t:'ai',s:'IPS'},{k:'codigo_ips_destino',l:'Código IPS Destino',t:'man',s:'IPS'},{k:'medico_solicitante',l:'Médico solicitante',t:'ai',s:'IPS'},{k:'quien_genera',l:'Quien genera',t:'man',s:'IPS'}],hasMeds:false},
-  solicitud_laboratorios:{name:'Solicitud laboratorios',icon:'🧪',desc:'Paciente + muestra + laboratorios',sections:['Datos del paciente','Laboratorios'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'muestra',l:'Tipo de muestra',t:'ai',s:'Laboratorios'},{k:'quien_genera',l:'Quien genera',t:'man',s:'Laboratorios'}],hasLabs:true,hasMeds:false},
+  solicitud_laboratorios:{name:'Solicitud laboratorios',icon:'🧪',desc:'Varias solicitudes, una por fila',sections:['Solicitudes'],fields:[{k:'quien_genera',l:'Quien genera',t:'man',s:'Solicitudes'}],hasLabs:true,hasMeds:false},
   formulas_control:{name:'Fórmulas de Control',icon:'📋',desc:'Por paciente: medicamento, dosis y turno',sections:['Medicamentos por paciente'],fields:[{k:'quien_genera',l:'Quien genera',t:'man',s:'Medicamentos por paciente'}],hasMeds:true,isControl:true}
 };
 
@@ -284,7 +284,7 @@ async function extractData(){
     var clean=raw.replace(/```json|```/g,'').trim();
     var parsed={};try{parsed=JSON.parse(clean);}catch(e){console.error('parse err',clean);}
     meds=parsed.medicamentos||[];
-    labs=parsed.laboratorios||[];
+    labs=parsed.solicitudes||parsed.laboratorios||[];
     prog(90,'Renderizando...');
     renderForm(fmt,parsed);
     prog(100,'¡Listo!');
@@ -303,9 +303,9 @@ function buildPrompt(fmt){
   var base='Eres un asistente especializado en extracción de datos de documentos médicos colombianos.\n\nREGLAS CRÍTICAS:\n1. nombre_paciente → SOLO del campo "Paciente:" o "Nombre Paciente:". NUNCA del cuidador.\n2. identificacion_paciente → SOLO del campo "Identificación Paciente:". NUNCA del cuidador.\n3. afiliacion → del campo "Afiliación:" (POS, PÓLIZA, ARL, etc).\n4. IGNORA: "Nombre del cuidador", "Cuidador", "Representante", "Familiar".\n5. Si un campo no está visible devuelve "".\n6. NUNCA inventes datos.';
   if(fmt.isControl)return base+'\n\nFORMATO FÓRMULAS DE CONTROL: tabla donde CADA FILA es un paciente diferente.\nDevuelve SOLO este JSON:\n{"medicamentos":[{"nombre_paciente":"","identificacion_paciente":"","afiliacion":"","medicamento_dosis_turno":"medicamento y dosis SIN código de turno","turno":"T1 o T2 o T3 si aparece","cantidad_be":"1 BE"}]}';
   if(fmt.isLab)return base+'\n\nFORMATO PROGRAMACIÓN LABORATORIOS. Devuelve SOLO:\n{"nombre_paciente":"","identificacion_paciente":"","afiliacion":"","direccion":"","barrio":"","municipio":"","telefono":"todos los teléfonos separados por coma","fecha_prestacion":""}';
-  if(fmt.hasLabs)return base+'\n\nFORMATO SOLICITUD LABORATORIOS. Devuelve SOLO:\n{"nombre_paciente":"","identificacion_paciente":"","afiliacion":"","muestra":"","laboratorios":[{"nombre_laboratorio":"","descripcion":""}]}';
+  if(fmt.hasLabs)return base+'\n\nFORMATO SOLICITUD LABORATORIOS.\nLos pantallazos pueden venir en distintos estilos: formularios con etiquetas separadas, tablas, o texto corrido en un recuadro donde aparecen seguidas las etiquetas "Nombre Paciente:", "Identificación Paciente:", "Afiliación:", "Tipo de muestra:", "Descripcion:" (a veces sin tilde). Reconoce los datos sin importar el estilo.\nSi hay VARIAS solicitudes de laboratorio (varios pacientes o varios recuadros), devuelve cada una como un elemento del array "solicitudes".\nDevuelve SOLO este JSON:\n{"solicitudes":[{"nombre_paciente":"","identificacion_paciente":"","afiliacion":"","muestra":"valor de Tipo de muestra","descripcion":"valor de Descripcion"}]}';
   if(fmt.name==='Cambio de IPS')return base+'\n\nFORMATO CAMBIO IPS. Devuelve SOLO:\n{"nombre_paciente":"","identificacion_paciente":"","afiliacion":"","ips_origen":"","ips_destino":"","medico_solicitante":""}';
-  if(fmt.hasMeds){var isDom=fmt.name==='Fórmulas domicilio';return base+'\n\nFORMATO: '+fmt.name+'. Extrae SOLO: nombre_paciente, identificacion_paciente, afiliacion'+(isDom?', direccion, telefono, barrio, ciudad':'')+' y medicamentos (medicamento, dosis, frecuencia, cantidad, via).\nDevuelve SOLO:\n{"nombre_paciente":"","identificacion_paciente":"","afiliacion":""'+(isDom?',"direccion":"","telefono":"","barrio":"","ciudad":""':'')+', "medicamentos":[{"medicamento":"","dosis":"","frecuencia":"","cantidad":"","via":""}]}';}
+  if(fmt.hasMeds){var isDom=fmt.name==='Fórmulas domicilio';return base+'\n\nFORMATO: '+fmt.name+'. Extrae SOLO: nombre_paciente, identificacion_paciente, afiliacion'+(isDom?', direccion_completa (concatena dirección + barrio + municipio/ciudad en un solo campo), telefono':'')+' y medicamentos (medicamento, dosis, frecuencia, cantidad, via).\nDevuelve SOLO:\n{"nombre_paciente":"","identificacion_paciente":"","afiliacion":""'+(isDom?',"direccion_completa":"dirección + barrio + ciudad/municipio concatenados","telefono":""':'')+', "medicamentos":[{"medicamento":"","dosis":"","frecuencia":"","cantidad":"","via":""}]}';}
   return base+'\n\nDevuelve SOLO un JSON con los campos visibles.';
 }
 
@@ -335,8 +335,8 @@ function renderForm(fmt,data){
   }
   if(fmt.hasLabs){
     var ld=document.createElement('div');ld.className='sec-block';ld.style.marginBottom='16px';
-    ld.innerHTML='<div class="sec-hdr">Laboratorios <span class="badge bai">IA</span></div><div class="sec-body" id="labsCont"></div>';
-    c.appendChild(ld);renderLabs(data.laboratorios||[]);
+    ld.innerHTML='<div class="sec-hdr">Solicitudes de laboratorio <span class="badge bai">IA</span></div><div class="sec-body" id="labsCont"></div>';
+    c.appendChild(ld);renderLabs(data.solicitudes||data.laboratorios||[]);
   }
 }
 
@@ -381,13 +381,17 @@ function renderLabs(data){
   labs.forEach(function(l,i){
     var r=document.createElement('div');r.className='med-row';
     r.innerHTML='<button class="rbtn" onclick="delLab('+i+')">×</button>'
-      +'<div class="lfields">'
-      +'<div class="fi"><label>Laboratorio</label><input class="aif" id="ln_'+i+'" value="'+esc(l.nombre_laboratorio||l.nombre||'')+'"></div>'
-      +'<div class="fi"><label>Descripción</label><input class="aif" id="ld_'+i+'" value="'+esc(l.descripcion||'')+'"></div>'
+      +'<div class="mfields" style="grid-template-columns:2fr 1fr 1fr;margin-bottom:6px">'
+      +'<div class="fi"><label>Nombre Paciente <span class="badge bai">IA</span></label><input class="aif" id="ln_'+i+'" value="'+esc(l.nombre_paciente||'')+'"></div>'
+      +'<div class="fi"><label>Identificación <span class="badge bai">IA</span></label><input class="aif" id="li_'+i+'" value="'+esc(l.identificacion_paciente||'')+'"></div>'
+      +'<div class="fi"><label>Afiliación <span class="badge bai">IA</span></label><input class="aif" id="la_'+i+'" value="'+esc(l.afiliacion||'')+'"></div>'
+      +'</div><div class="lfields">'
+      +'<div class="fi"><label>Tipo de muestra <span class="badge bai">IA</span></label><input class="aif" id="lm_'+i+'" value="'+esc(l.muestra||'')+'"></div>'
+      +'<div class="fi"><label>Descripción <span class="badge bai">IA</span></label><input class="aif" id="ld_'+i+'" value="'+esc(l.descripcion||l.nombre_laboratorio||l.nombre||'')+'"></div>'
       +'</div>';
     c.appendChild(r);
   });
-  var ab=document.createElement('button');ab.className='add-btn';ab.textContent='+ Agregar laboratorio';
+  var ab=document.createElement('button');ab.className='add-btn';ab.textContent='+ Agregar solicitud';
   ab.onclick=function(){labs.push({});renderLabs(labs);};
   c.appendChild(ab);
 }
@@ -414,10 +418,10 @@ function collectData(){
   if(fmt.hasLabs){
     var ls=[];
     labs.forEach(function(_,i){
-      if(!document.getElementById('ln_'+i))return;
-      ls.push({nombre_laboratorio:val('ln_'+i),descripcion:val('ld_'+i)});
+      if(!document.getElementById('ld_'+i))return;
+      ls.push({nombre_paciente:val('ln_'+i),identificacion_paciente:val('li_'+i),afiliacion:val('la_'+i),muestra:val('lm_'+i),descripcion:val('ld_'+i)});
     });
-    r.laboratorios=ls;
+    r.solicitudes=ls;
   }
   return r;
 }
@@ -436,9 +440,9 @@ function renderPreview(){
   }else if(fmt.hasMeds&&data.medicamentos&&data.medicamentos.length){
     hdrs=['Nombre Paciente','Identificación','Afiliación','Medicamento','Dosis','Frecuencia','Cantidad','Vía','Quien genera'];
     rows=data.medicamentos.map(function(m){return[data.nombre_paciente,data.identificacion_paciente,data.afiliacion,m.medicamento,m.dosis,m.frecuencia,m.cantidad,m.via,data.quien_genera];});
-  }else if(fmt.hasLabs&&data.laboratorios&&data.laboratorios.length){
-    hdrs=['Nombre Paciente','Identificación','Afiliación','Muestra','Laboratorio','Descripción','Quien genera'];
-    rows=data.laboratorios.map(function(l){return[data.nombre_paciente,data.identificacion_paciente,data.afiliacion,data.muestra,l.nombre_laboratorio,l.descripcion,data.quien_genera];});
+  }else if(fmt.hasLabs&&data.solicitudes&&data.solicitudes.length){
+    hdrs=['Nombre Paciente','Identificación','Afiliación','Muestra','Descripción','Quien genera'];
+    rows=data.solicitudes.map(function(l){return[l.nombre_paciente,l.identificacion_paciente,l.afiliacion,l.muestra,l.descripcion,data.quien_genera];});
   }else{
     hdrs=fmt.fields.slice(0,6).map(function(f){return f.l;});
     rows=[fmt.fields.slice(0,6).map(function(f){return data[f.k]||'';})];
@@ -454,7 +458,7 @@ function generateExcel(){
     var title,hdrs,rows;
     if(fmt.isControl){title=fmt.name;hdrs=['Nombre Paciente','Identificación Paciente','Afiliación','Medicamento y Dosis','Turno','Cantidad','Quien genera'];rows=(data.medicamentos||[]).map(function(m){return[m.nombre_paciente||'',m.identificacion_paciente||'',m.afiliacion||'',m.medicamento_dosis_turno||'',m.turno||'',m.cantidad_be||'1 BE',data.quien_genera||''];});}
     else if(fmt.hasMeds){title=fmt.name;hdrs=['Nombre Paciente','Identificación Paciente','Afiliación','Medicamento','Dosis','Frecuencia','Cantidad','Vía','Quien genera'];rows=(data.medicamentos||[]).map(function(m){return[data.nombre_paciente||'',data.identificacion_paciente||'',data.afiliacion||'',m.medicamento||'',m.dosis||'',m.frecuencia||'',m.cantidad||'',m.via||'',data.quien_genera||''];});}
-    else if(fmt.hasLabs){title=fmt.name;hdrs=['Nombre Paciente','Identificación Paciente','Afiliación','Tipo de muestra','Laboratorio','Descripción','Quien genera'];rows=(data.laboratorios||[]).map(function(l){return[data.nombre_paciente||'',data.identificacion_paciente||'',data.afiliacion||'',data.muestra||'',l.nombre_laboratorio||'',l.descripcion||'',data.quien_genera||''];});}
+    else if(fmt.hasLabs){title=fmt.name;hdrs=['Nombre Paciente','Identificación Paciente','Afiliación','Tipo de muestra','Descripción','Quien genera'];rows=(data.solicitudes||[]).map(function(l){return[l.nombre_paciente||'',l.identificacion_paciente||'',l.afiliacion||'',l.muestra||'',l.descripcion||'',data.quien_genera||''];});}
     else if(fmt.isLab){dlLabXLS(data);return;}
     else{title=fmt.name;hdrs=fmt.fields.map(function(f){return f.l;});rows=[fmt.fields.map(function(f){return data[f.k]||'';})]; }
     dlXLS(title,hdrs,rows);
