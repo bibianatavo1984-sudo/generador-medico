@@ -165,10 +165,44 @@ var FMTS = {
   formulas_domicilio:{name:'Fórmulas domicilio',icon:'🏠',desc:'Paciente + dirección + medicamentos',sections:['Datos del paciente','Dirección y contacto','Medicamentos'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'direccion_completa',l:'Dirección (Dir / Barrio / Municipio)',t:'ai',s:'Dirección y contacto'},{k:'telefono',l:'Teléfono',t:'ai',s:'Dirección y contacto'},{k:'quien_genera',l:'Quien genera',t:'man',s:'Dirección y contacto'}],hasMeds:true},
   salud_casa:{name:'Salud en casa',icon:'💊',desc:'Paciente + medicamentos',sections:['Datos del paciente','Medicamentos'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'quien_genera',l:'Quien genera',t:'man',s:'Datos del paciente'}],hasMeds:true},
   laboratorios:{name:'Laboratorios',icon:'🔬',desc:'Formato tabla programación',sections:['Datos del paciente','Programación'],fields:[{k:'nombre_paciente',l:'Nombre paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Documento Identidad',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'direccion',l:'Dirección atención',t:'ai',s:'Datos del paciente'},{k:'barrio',l:'Barrio',t:'ai',s:'Datos del paciente'},{k:'municipio',l:'Municipio',t:'ai',s:'Datos del paciente'},{k:'telefono',l:'Teléfono/Celular',t:'ai',s:'Datos del paciente'},{k:'fecha_prestacion',l:'Fecha de programación',t:'ai',s:'Programación'},{k:'quien_programa',l:'Quien programa',t:'man',s:'Programación'}],hasMeds:false,isLab:true},
-  cambio_ips:{name:'Cambio de IPS',icon:'🔄',desc:'Paciente + IPS origen/destino',sections:['Datos del paciente','IPS'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'ips_origen',l:'IPS Origen',t:'ai',s:'IPS'},{k:'codigo_ips_origen',l:'Código IPS Origen',t:'man',s:'IPS'},{k:'ips_destino',l:'IPS Destino',t:'ai',s:'IPS'},{k:'codigo_ips_destino',l:'Código IPS Destino',t:'man',s:'IPS'},{k:'medico_solicitante',l:'Médico solicitante',t:'ai',s:'IPS'},{k:'quien_genera',l:'Quien genera',t:'man',s:'IPS'}],hasMeds:false},
+  cambio_ips:{name:'Cambio de IPS',icon:'🔄',desc:'Paciente + IPS origen/destino',sections:['Datos del paciente','IPS'],fields:[{k:'nombre_paciente',l:'Nombre Paciente',t:'ai',s:'Datos del paciente'},{k:'identificacion_paciente',l:'Identificación Paciente',t:'ai',s:'Datos del paciente'},{k:'afiliacion',l:'Afiliación',t:'ai',s:'Datos del paciente'},{k:'ips_origen',l:'IPS Origen',t:'ipsSelect',s:'IPS'},{k:'codigo_ips_origen',l:'Código IPS Origen',t:'ipsCode',s:'IPS'},{k:'ips_destino',l:'IPS Destino',t:'ipsSelect',s:'IPS'},{k:'codigo_ips_destino',l:'Código IPS Destino',t:'ipsCode',s:'IPS'},{k:'medico_solicitante',l:'Médico solicitante',t:'ai',s:'IPS'},{k:'quien_genera',l:'Quien genera',t:'man',s:'IPS'}],hasMeds:false},
   solicitud_laboratorios:{name:'Solicitud laboratorios',icon:'🧪',desc:'Varias solicitudes, una por fila',sections:['Solicitudes'],fields:[{k:'quien_genera',l:'Quien genera',t:'man',s:'Solicitudes'}],hasLabs:true,hasMeds:false},
   formulas_control:{name:'Fórmulas de Control',icon:'📋',desc:'Por paciente: medicamento, dosis y turno',sections:['Medicamentos por paciente'],fields:[{k:'quien_genera',l:'Quien genera',t:'man',s:'Medicamentos por paciente'}],hasMeds:true,isControl:true}
 };
+
+// ===== BASE DE DATOS DE IPS (Cambio de IPS) =====
+var IPS_BASE = [{n:'IPS SURA LOS MOLINOS',c:'2660'},{n:'IPS SURA CENTRO',c:'80'},{n:'HUMANITAS ITAGUI',c:'6'},{n:'CIS COMFAMA ENVIGADO',c:'27'},{n:'CIS COMFAMA CALDAS',c:'34'},{n:'CIS COMFAMA SAN IGNACIO',c:'29'},{n:'CIS COMFAMA COPACABANA',c:'2679'},{n:'IPS SURA CORDOBA',c:'20'},{n:'COOMSOCIAL BELLO',c:'36'},{n:'COOPSANA - CENTRO',c:'35'},{n:'IPS SURA SAN DIEGO',c:'2694'},{n:'CIS COMFAMA LA 80',c:'2670'},{n:'IPS SURA MONTERREY',c:'1709'},{n:'INSTITUTO DEL TORAX - LA PAZ',c:'60'},{n:'PROSALCO SAN JUAN',c:'1031'},{n:'CIS COMFAMA SABANETA',c:'91'},{n:'IPS SURA ALMACENTRO',c:'42'},{n:'COOMSOCIAL - ESTADIO',c:'38'},{n:'CIS COMFAMA GIRARDOTA',c:'32'},{n:'CIS COMFAMA MANRIQUE',c:'30'},{n:'IPS SURA SAMAN',c:'1789'},{n:'CIS COMFAMA ARANJUEZ',c:'31'},{n:'CIS COMFAMA BELLO',c:'37'},{n:'CIS COMFAMA ITAGUI',c:'26'},{n:'COOPSANA CALASANZ',c:'1013'},{n:'CENTRO DE ESPECIALISTAS',c:'99998'},{n:'SALUD SIGLO XXI -ENVIGADO',c:'86'},{n:'IPS MEGA SERVICIOS INTEGRALES DE SALUD S',c:'3'},{n:'IPS SURA BELEN',c:'89'},{n:'SALUD SIGLO XXI - LAURELES',c:'25'},{n:'IPS SURA ALMACENTRO',c:'2672'},{n:'COOPSANA DE LA 65',c:'2136'},{n:'CIS COMFAMA RIONEGRO',c:'53'},{n:'IPS SURA RIONEGRO',c:'78'},{n:'SALUD EN CASA RIONEGRO',c:'2194'},{n:'IPS SALUD EN CASA CALI',c:'83'},{n:'COOPSANA NORTE',c:'2136'},{n:'PROSALCO CARMEN DE VIBORAL',c:'2705'},{n:'CIS COMFAMA LA CEJA',c:'33'},{n:'SALUDSURA SAO PAULO',c:'34'},{n:'PROSALCO MARINILLA',c:'35'},{n:'SALUD SURA RIONEGRO',c:'2713'},{n:'CIS COMFAMA EL PORVENIR - RIONEGRO – RESERVA PLAZA',c:'2743'},{n:'CIS COMFAMA SANTUARIO',c:'2741'},{n:'CIS COMFAMA RETIRO',c:'2752'},{n:'PROSALCO GUARNE',c:'2431'},{n:'SALUD EN CASA MEDELLIN',c:'55'},{n:'CIS COMFAMA EL RETIRO LOS ROBLES',c:'2802'},{n:'CIS COMFAMA MONTERREY',c:'2797'},{n:'CIS COMFAMA LA UNION',c:'2799'},{n:'SALUDSURA BOGOTA',c:'2278'},{n:'IPS HOSPITAL LA CEJA',c:'2819'},{n:'IPS HOSPITAL SAN JUAN DE DIOS CARMEN DE VIBORAL',c:'2882'},{n:'IPS HOSPITAL PRESBITERO ALONSO MARIA GIRALDO SAN RAFAEL',c:'2817'},{n:'IPS SURA ERC RIONEGRO',c:'171937'},{n:'IPS ESPECIALIZADA SURA - DIABETES',c:'2798'},{n:'IPS SURA ATEL CITY MEDICA RIONEGRO',c:'78'},{n:'IPS SURA CENTRO',c:'80'}];
+var IPS_EXTRA = []; // IPS agregadas manualmente en esta sesion
+function getIpsList(){ return IPS_BASE.concat(IPS_EXTRA); }
+function findIpsCode(name){
+  var list=getIpsList();
+  for(var i=0;i<list.length;i++){ if(list[i].n.toLowerCase()===String(name||'').toLowerCase()) return list[i].c; }
+  return '';
+}
+function addIpsToList(name,code){
+  if(!name||!code)return false;
+  IPS_EXTRA.push({n:name.trim(),c:String(code).trim()});
+  return true;
+}
+function onIpsSelectChange(sel,fieldKey){
+  var codeKey=fieldKey==='ips_origen'?'codigo_ips_origen':'codigo_ips_destino';
+  var codeInput=document.getElementById('f_'+codeKey);
+  if(codeInput)codeInput.value=findIpsCode(sel.value);
+}
+function openAddIpsPrompt(){
+  var name=prompt('Nombre de la nueva IPS:');
+  if(!name)return;
+  var code=prompt('Código de la IPS "'+name+'":');
+  if(!code)return;
+  if(addIpsToList(name,code)){
+    alert('IPS agregada. Ahora aparece en las listas desplegables de este formato.');
+    if(typeof FMTS!=='undefined'&&selFmt==='cambio_ips'){
+      // Re-render current form data to refresh dropdown options
+      var d=collectData();
+      renderForm(FMTS[selFmt],d);
+    }
+  }
+}
 
 // ===== INIT CARDS =====
 (function(){
@@ -321,6 +355,27 @@ function renderForm(fmt,data){
     var g=d.querySelector('.fgrid');
     secs[sec].forEach(function(f){
       var v=data[f.k]||'';
+      if(f.t==='ipsSelect'){
+        var di=document.createElement('div');di.className='fi';
+        var opts='<option value="">Selecciona una IPS...</option>';
+        getIpsList().forEach(function(ips){
+          var matched=ips.n.toLowerCase()===String(v).toLowerCase();
+          opts+='<option value="'+esc(ips.n)+'"'+(matched?' selected':'')+'>'+esc(ips.n)+'</option>';
+        });
+        var notInList=v&&!getIpsList().some(function(ips){return ips.n.toLowerCase()===v.toLowerCase();});
+        di.innerHTML='<label>'+f.l+'<span class="badge bai">IA</span></label><select class="'+(v?'aif':'man')+'" id="f_'+f.k+'" onchange="onIpsSelectChange(this,\''+f.k+'\')">'+opts+'</select>'
+          +(notInList?'<div style="font-size:.72rem;color:#d97706;margin-top:3px">⚠ "'+esc(v)+'" no está en la lista, selecciónala o agrégala con el botón de abajo</div>':'');
+        g.appendChild(di);
+        return;
+      }
+      if(f.t==='ipsCode'){
+        var di=document.createElement('div');di.className='fi';
+        var codeKey=f.k==='codigo_ips_origen'?'ips_origen':'ips_destino';
+        var autoCode=findIpsCode(data[codeKey]||'')||v;
+        di.innerHTML='<label>'+f.l+'<span class="badge bauto">Auto</span></label><input type="text" class="aut" id="f_'+f.k+'" value="'+esc(autoCode)+'" placeholder="Se completa al elegir la IPS" readonly />';
+        g.appendChild(di);
+        return;
+      }
       var cls=f.t==='ai'&&v?'aif':f.t==='man'?'man':'man';
       var badge=f.t==='ai'?'<span class="badge bai">IA</span>':'<span class="badge bman">Manual</span>';
       var di=document.createElement('div');di.className='fi';
@@ -337,6 +392,13 @@ function renderForm(fmt,data){
     var ld=document.createElement('div');ld.className='sec-block';ld.style.marginBottom='16px';
     ld.innerHTML='<div class="sec-hdr">Solicitudes de laboratorio <span class="badge bai">IA</span></div><div class="sec-body" id="labsCont"></div>';
     c.appendChild(ld);renderLabs(data.solicitudes||data.laboratorios||[]);
+  }
+  if(selFmt==='cambio_ips'){
+    var ipsBtn=document.createElement('button');
+    ipsBtn.className='add-btn';ipsBtn.style.marginTop='4px';
+    ipsBtn.textContent='+ Agregar nueva IPS a la lista';
+    ipsBtn.onclick=openAddIpsPrompt;
+    c.appendChild(ipsBtn);
   }
 }
 
